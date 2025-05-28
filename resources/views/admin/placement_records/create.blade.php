@@ -55,8 +55,9 @@
                                         <label for="academic_year">ปีการบรรจุ (พ.ศ.) <span
                                                 class="text-danger">*</span></label>
                                         <select name="academic_year" id="academic_year"
-                                            class="form-control @error('academic_year') is-invalid @enderror" required>
-                                            <option value="">-- เลือกปี --</option>
+                                            class="form-control @error('academic_year') is-invalid @enderror">
+                                            <option selected value="{{ $LastYear }}">{{ $LastYear }}</option>
+                                            <option value="" disabled>-- เลือกปี --</option>
                                             @foreach ($academicYears as $year)
                                                 <option value="{{ $year }}"
                                                     {{ old('academic_year') == $year ? 'selected' : '' }}>
@@ -75,7 +76,7 @@
                                                 class="text-danger">*</span></label>
                                         <input type="text" name="announcement_date" id="announcement_date"
                                             class="form-control flatpickr @error('announcement_date') is-invalid @enderror"
-                                            value="{{ old('announcement_date') }}" placeholder="เลือกวันที่ประกาศ" required>
+                                            value="{{ old('announcement_date') }}" placeholder="ปปปป-ดด-วว">
                                         @error('announcement_date')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
@@ -87,8 +88,7 @@
                                                 class="text-danger">*</span></label>
                                         <input type="number" name="round_number" id="round_number"
                                             class="form-control @error('round_number') is-invalid @enderror"
-                                            value="{{ old('round_number', 1) }}" min="1" placeholder="กรอกตัวเลข"
-                                            required>
+                                            value="{{ old('round_number', 1) }}" min="1" placeholder="กรอกตัวเลข">
                                         @error('round_number')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
@@ -103,7 +103,7 @@
                                 {{-- ใช้ Select2 สำหรับ Educational Area ถ้ามีรายการเยอะ --}}
                                 <select name="educational_area_id" id="educational_area_id"
                                     class="form-control select2-ea @error('educational_area_id') is-invalid @enderror"
-                                    style="width: 100%;" required>
+                                    style="width: 100%;">
                                     <option value="">-- เลือกเขตพื้นที่ฯ --</option>
                                     @foreach ($educationalAreas as $area)
                                         <option value="{{ $area->id }}"
@@ -259,6 +259,7 @@
 @stop
 
 @section('js')
+
 <script>
     $(document).ready(function() {
         // Initialize Select2 for Educational Area
@@ -267,19 +268,15 @@
             placeholder: $(this).data('placeholder') || '-- เลือกเขตพื้นที่ฯ --',
             allowClear: true
         });
-
-        // Initialize Flatpickr
+        // Initialize Flatpickr for date input
         $('.flatpickr').flatpickr({
-            altInput: true,
-            altFormat: "j F Y",
-            dateFormat: "Y-m-d",
-            allowInput: true,
-            disableMobile: "true"
+            dateFormat: 'Y-m-d',
+            locale: {
+                firstDayOfWeek: 1 // Start week on Monday
+            }
         });
-
-        // BsCustomFileInput
+        // Initialize bsCustomFileInput
         bsCustomFileInput.init();
-
         // Attachment previews
         $('#attachments').on('change', function() {
             var files = $(this)[0].files;

@@ -82,12 +82,14 @@ class PlacementRecordController extends Controller
         // สร้างช่วงปีการศึกษา (พ.ศ.) สำหรับ dropdown
         // คุณอาจจะต้องการ logic ที่ยืดหยุ่นกว่านี้ในการสร้างปี เช่น ดึงจาก config หรือ helper
         $currentThaiYear = now()->year + 543;
+        $LastYear = $currentThaiYear - 1;
         $academicYears = range($currentThaiYear + 3, $currentThaiYear - 5); // สร้างช่วงปี เช่น 2570 ถึง 2562
 
         return view('admin.placement_records.create', compact(
             'educationalAreas',
             'subjectGroups',
-            'academicYears'
+            'academicYears',
+            'LastYear'
         ));
     }
 
