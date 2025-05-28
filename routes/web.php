@@ -76,6 +76,9 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
         // Admin Dashboard
+        Route::get('/', function () {
+            return redirect()->route('admin.dashboard');
+        }); // หน้า Dashboard ของ Admin
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         // CRUD สำหรับ เขตพื้นที่การศึกษา
         Route::resource('educational-areas', AdminEducationalAreaController::class);
