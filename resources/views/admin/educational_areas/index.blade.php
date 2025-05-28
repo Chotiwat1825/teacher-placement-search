@@ -143,7 +143,7 @@
                                     จากทั้งหมด {{ $educationalAreas->total() }} รายการ</small>
                             </div>
                             <div class="float-right">
-                                {{ $educationalAreas->appends(request()->query())->links('vendor.pagination.adminlte') }}
+                                {{ $educationalAreas->appends(request()->query())->links('pagination::bootstrap-4') }}
                             </div>
                         </div>
                     @endif

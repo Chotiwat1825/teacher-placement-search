@@ -146,7 +146,7 @@
                                 <small>แสดง {{ $placementRecords->firstItem() }} ถึง {{ $placementRecords->lastItem() }} จากทั้งหมด {{ $placementRecords->total() }} รายการ</small>
                             </div>
                             <div class="float-right">
-                                {{ $placementRecords->appends(request()->query())->links('vendor.pagination.adminlte') }}
+                                {{ $placementRecords->appends(request()->query())->links('pagination::bootstrap-4') }}
                             </div>
                         </div>
                     @endif

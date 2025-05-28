@@ -107,7 +107,7 @@
                     <!-- /.card-body -->
                     @if ($subjectGroups->hasPages())
                         <div class="card-footer clearfix">
-                            {{ $subjectGroups->links('vendor.pagination.adminlte') }} {{-- หรือ pagination view ที่คุณใช้ --}}
+                            {{ $subjectGroups->appends(request()->query())->links('pagination::bootstrap-4') }}
                         </div>
                     @endif
                 </div>
