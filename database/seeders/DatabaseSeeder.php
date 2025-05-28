@@ -9,10 +9,10 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             AdminUserSeeder::class, // << ต้องมาก่อน PlacementRecordSeeder
-            // EducationalAreaSeeder::class,
-            // SubjectGroupSeeder::class,
-            DemoEducationalAreaSeeder::class, // << ต้องอยู่ก่อน
-            DemoSubjectGroupSeeder::class, // << ต้องอยู่ก่อน
+            EducationalAreaSeeder::class,
+            SubjectGroupSeeder::class,
+            //DemoEducationalAreaSeeder::class, // << ต้องอยู่ก่อน
+            //DemoSubjectGroupSeeder::class, // << ต้องอยู่ก่อน
             DemoPlacementRecordSeeder::class,
         ]);
     }

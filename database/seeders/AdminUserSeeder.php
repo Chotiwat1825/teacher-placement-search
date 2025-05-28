@@ -11,10 +11,10 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'admin@admin.com'],
             [
                 'name' => 'ผู้ดูแลระบบหลัก',
-                'password' => Hash::make('password123'), // เปลี่ยนรหัสผ่านนี้ในระบบจริง
+                'password' => Hash::make('123'), // เปลี่ยนรหัสผ่านนี้ในระบบจริง
                 'is_admin' => true,
                 'email_verified_at' => now(),
                 'profile_image' => null, // หรือใส่ path รูปตัวอย่างถ้ามี
