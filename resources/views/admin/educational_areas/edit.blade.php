@@ -39,7 +39,7 @@
                                 <label for="name">ชื่อเขตพื้นที่การศึกษา <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror"
                                     id="name" name="name" placeholder="เช่น สพป. กรุงเทพมหานคร, สพม. นครราชสีมา"
-                                    value="{{ old('name', $educationalArea->name) }}" {{-- แสดงค่าเดิมจาก $educationalArea หรือ old() --}} required
+                                    value="{{ old('name', $educationalArea->name) }}" {{-- แสดงค่าเดิมจาก $educationalArea หรือ old() --}}
                                     autofocus>
                                 @error('name')
                                     <span class="invalid-feedback" role="alert">

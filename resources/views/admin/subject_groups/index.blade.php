@@ -72,17 +72,17 @@
                                             </td>
                                             <td class="text-center">
                                                 {{-- ปุ่ม Show (ถ้ามีหน้า Show) --}}
-                                                {{-- <a href="{{ route('admin.subject-groups.show', $group->id) }}" class="btn btn-info btn-xs" title="ดูรายละเอียด">
+                                                <a href="{{ route('admin.subject-groups.show', $group->id) }}" class="btn btn-info btn-xs" title="ดูรายละเอียด">
                                                     <i class="fas fa-eye"></i>
-                                                </a> --}}
+                                                </a>
                                                 <a href="{{ route('admin.subject-groups.edit', $group->id) }}"
                                                     class="btn btn-warning btn-xs" title="แก้ไข">
-                                                    <i class="fas fa-edit"></i> แก้ไข
+                                                    <i class="fas fa-edit"></i>
                                                 </a>
                                                 <button class="btn btn-danger btn-xs delete-button"
                                                     data-id="{{ $group->id }}" data-name="{{ $group->name }}"
                                                     title="ลบ">
-                                                    <i class="fas fa-trash-alt"></i> ลบ
+                                                    <i class="fas fa-trash-alt"></i>
                                                 </button>
                                                 <form id="delete-form-{{ $group->id }}"
                                                     action="{{ route('admin.subject-groups.destroy', $group->id) }}"
