@@ -84,7 +84,7 @@
                                             <th>เขตพื้นที่ฯ</th>
                                             <th>กลุ่มวิชาเอก</th>
                                             <th class="text-center">รอบที่</th>
-                                            <th>วันที่ประกาศ</th>
+                                            <th>วันที่ประกาศ</th> {{-- หัวข้อตาราง --}}
                                             <th>ผู้บันทึก</th>
                                             <th class="text-center" style="width: 150px">การดำเนินการ</th>
                                         </tr>
@@ -97,13 +97,20 @@
                                                 <td>{{ $record->educationalArea->name ?? 'N/A' }}</td>
                                                 <td>
                                                     @if ($record->subjectGroups->isNotEmpty())
-                                                        {{ $record->subjectGroups->pluck('name')->implode(', ') }}
+                                                        {{ Str::limit($record->subjectGroups->pluck('name')->implode(', '), 40) }} {{-- จำกัดความยาวถ้าชื่อยาวมาก --}}
                                                     @else
                                                         <span class="text-muted">N/A</span>
                                                     @endif
                                                 </td>
                                                 <td class="text-center">{{ $record->round_number }}</td>
-                                                <td>{{ $record->announcement_date ? $record->announcement_date->format('d M Y') : '-' }}</td>
+                                                <td>
+                                                    {{-- เปลี่ยนการแสดงผลวันที่ --}}
+                                                    @if ($record->announcement_date)
+                                                        {{ $record->announcement_date->format('j F Y') }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
                                                 <td>{{ $record->user->name ?? 'N/A' }}</td>
                                                 <td class="text-center">
                                                     <a href="{{ route('admin.placement-records.show', $record->id) }}" class="btn btn-info btn-xs" title="ดูรายละเอียด">
@@ -146,6 +153,8 @@
                                 <small>แสดง {{ $placementRecords->firstItem() }} ถึง {{ $placementRecords->lastItem() }} จากทั้งหมด {{ $placementRecords->total() }} รายการ</small>
                             </div>
                             <div class="float-right">
+                                {{-- ใช้ pagination view ของ Bootstrap 4 (ถ้า AdminLTE ไม่ได้ override) --}}
+                                {{-- หรือถ้าคุณได้ publish pagination view ของ AdminLTE แล้วและมันชื่ออื่น ให้เปลี่ยนตรงนี้ --}}
                                 {{ $placementRecords->appends(request()->query())->links('pagination::bootstrap-4') }}
                             </div>
                         </div>
@@ -155,7 +164,6 @@
             </div>
         </div>
     </div>
-        
 @stop
 
 @section('css')
@@ -167,11 +175,15 @@
             border-radius: .2rem;
             margin-right: 3px;
         }
+
         .table-responsive {
             overflow-x: auto;
         }
-        .table-sm td, .table-sm th {
-            padding: .4rem; /* Adjust padding for smaller table */
+
+        .table-sm td,
+        .table-sm th {
+            padding: .4rem;
+            /* Adjust padding for smaller table */
             font-size: 0.9rem;
         }
     </style>
@@ -180,15 +192,17 @@
 @section('js')
     <script>
         $(document).ready(function() {
-            $('.delete-button').on('click', function (e) {
+            $('.delete-button').on('click', function(e) {
                 e.preventDefault();
                 var recordId = $(this).data('id');
-                var recordInfo = $(this).data('info'); // ใช้ data-info เพื่อแสดงข้อมูลที่สื่อความหมายมากขึ้น
+                var recordInfo = $(this).data(
+                'info'); // ใช้ data-info เพื่อแสดงข้อมูลที่สื่อความหมายมากขึ้น
                 var deleteForm = $('#delete-form-' + recordId);
 
                 Swal.fire({
                     title: 'ยืนยันการลบข้อมูลการบรรจุ?',
-                    html: "คุณต้องการลบข้อมูล: <br><strong>" + recordInfo + "</strong> ใช่หรือไม่?<br><small class='text-danger'>การกระทำนี้ไม่สามารถย้อนกลับได้ และไฟล์แนบทั้งหมดจะถูกลบไปด้วย!</small>",
+                    html: "คุณต้องการลบข้อมูล: <br><strong>" + recordInfo +
+                        "</strong> ใช่หรือไม่?<br><small class='text-danger'>การกระทำนี้ไม่สามารถย้อนกลับได้ และไฟล์แนบทั้งหมดจะถูกลบไปด้วย!</small>",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -208,9 +222,25 @@
         });
     </script>
     @if (session('success'))
-        <script> $(document).Toasts('create', { class: 'bg-success', title: 'สำเร็จ!', body: '{{ session('success') }}', autohide: true, delay: 5000 }); </script>
+        <script>
+            $(document).Toasts('create', {
+                class: 'bg-success',
+                title: 'สำเร็จ!',
+                body: '{{ session('success') }}',
+                autohide: true,
+                delay: 5000
+            });
+        </script>
     @endif
     @if (session('error'))
-        <script> $(document).Toasts('create', { class: 'bg-danger', title: 'เกิดข้อผิดพลาด!', body: '{{ session('error') }}', autohide: true, delay: 7000 }); </script>
+        <script>
+            $(document).Toasts('create', {
+                class: 'bg-danger',
+                title: 'เกิดข้อผิดพลาด!',
+                body: '{{ session('error') }}',
+                autohide: true,
+                delay: 7000
+            });
+        </script>
     @endif
 @stop

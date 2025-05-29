@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+
 class PlacementRecord extends Model {
     use HasFactory;
     protected $fillable = ['academic_year', 'announcement_date', 'educational_area_id', 'round_number', 'source_link', 'user_id'];
