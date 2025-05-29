@@ -56,10 +56,9 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="academic_year">บัญชีปี (พ.ศ.) <span
-                                                class="text-danger">*</span></label>
+                                        <label for="academic_year">บัญชีปี (พ.ศ.) <span class="text-danger">*</span></label>
                                         <select name="academic_year" id="academic_year"
-                                            class="form-control @error('academic_year') is-invalid @enderror" required>
+                                            class="form-control @error('academic_year') is-invalid @enderror">
                                             <option value="">-- เลือกปี --</option>
                                             @foreach ($academicYears as $year)
                                                 <option value="{{ $year }}"
@@ -82,8 +81,8 @@
                                             {{-- เพิ่ม data-wrap และ data-click-opens --}}
                                             <input type="text" name="announcement_date" id="announcement_date"
                                                 class="form-control @error('announcement_date') is-invalid @enderror"
-                                                value="{{ old('announcement_date') }}" placeholder="เลือกวันที่..."
-                                                required data-input> {{-- เพิ่ม data-input สำหรับ Flatpickr --}}
+                                                value="{{ old('announcement_date', $placementRecord->announcement_date ? $placementRecord->announcement_date->format('Y-m-d') : '') }}"
+                                                placeholder="เลือกวันที่..." data-input> {{-- เพิ่ม data-input สำหรับ Flatpickr --}}
                                             <div class="input-group-append">
                                                 <button class="btn btn-outline-secondary" type="button" title="เลือกวันที่"
                                                     data-toggle> {{-- ใช้ data-toggle --}}
@@ -110,7 +109,7 @@
                                         <input type="number" name="round_number" id="round_number"
                                             class="form-control @error('round_number') is-invalid @enderror"
                                             value="{{ old('round_number', $placementRecord->round_number) }}"
-                                            min="1" placeholder="กรอกตัวเลข" required>
+                                            min="1" placeholder="กรอกตัวเลข">
                                         @error('round_number')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
@@ -124,7 +123,7 @@
                                         class="text-danger">*</span></label>
                                 <select name="educational_area_id" id="educational_area_id"
                                     class="form-control select2-ea @error('educational_area_id') is-invalid @enderror"
-                                    style="width: 100%;" required>
+                                    style="width: 100%;">
                                     <option value="">-- เลือกเขตพื้นที่ฯ --</option>
                                     @foreach ($educationalAreas as $area)
                                         <option value="{{ $area->id }}"
