@@ -73,12 +73,12 @@
                                 <table class="table table-hover table-striped">
                                     <thead>
                                         <tr>
-                                            <th style="width: 10px">#</th>
-                                            <th>ชื่อเขตพื้นที่การศึกษา</th>
-                                            <th>รหัส</th>
-                                            <th>ประเภท</th>
-                                            <th class="text-center">จำนวนรายการบรรจุ</th>
-                                            <th class="text-center" style="width: 180px">การดำเนินการ</th>
+                                            <th style="width: 10px" class="text-nowrap">#</th>
+                                            <th class="text-nowrap">ชื่อเขตพื้นที่การศึกษา</th>
+                                            <th class="text-nowrap">รหัส</th>
+                                            <th class="text-nowrap">ประเภท</th>
+                                            <th class="text-center text-nowrap" style="width: 100px;">จำนวนรายการบรรจุ</th>
+                                            <th class="text-center text-nowrap" style="width: 150px">การดำเนินการ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -101,19 +101,21 @@
                                                     {{ number_format($area->placement_records_count) }}
                                                 </td>
                                                 <td class="text-center">
-                                                    <a href="{{ route('admin.educational-areas.show', $area->id) }}"
-                                                        class="btn btn-info btn-xs" title="ดูรายละเอียด">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a href="{{ route('admin.educational-areas.edit', $area->id) }}"
-                                                        class="btn btn-warning btn-xs" title="แก้ไข">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <button class="btn btn-danger btn-xs delete-button"
-                                                        data-id="{{ $area->id }}" data-name="{{ $area->name }}"
-                                                        title="ลบ">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
+                                                    <div class="btn-group btn-group-xs" role="group" aria-label="Actions">
+                                                        <a href="{{ route('admin.educational-areas.show', $area->id) }}"
+                                                            class="btn btn-info btn-group-xs" title="ดูรายละเอียด">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="{{ route('admin.educational-areas.edit', $area->id) }}"
+                                                            class="btn btn-warning btn-group-xs" title="แก้ไข">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button class="btn btn-danger btn-group-xs delete-button"
+                                                            data-id="{{ $area->id }}" data-name="{{ $area->name }}"
+                                                            title="ลบ">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </div>
                                                     <form id="delete-form-{{ $area->id }}"
                                                         action="{{ route('admin.educational-areas.destroy', $area->id) }}"
                                                         method="POST" style="display: none;">

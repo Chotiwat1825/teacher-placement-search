@@ -50,58 +50,68 @@
                     <!-- /.card-header -->
                     <div class="card-body p-0">
                         @if ($subjectGroups->count() > 0)
-                            <table class="table table-hover table-striped">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 10px">#</th>
-                                        <th>ชื่อกลุ่มวิชาเอก</th>
-                                        <th>รหัสกลุ่มวิชา</th>
-                                        <th class="text-center" style="width: 100px">จำนวนรายการบรรจุ</th>
-                                        <th class="text-center" style="width: 180px">การดำเนินการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($subjectGroups as $index => $group)
+                            {{-- เพิ่ม div นี้เพื่อทำให้ตาราง responsive --}}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
                                         <tr>
-                                            <td>{{ $subjectGroups->firstItem() + $index }}</td>
-                                            <td>{{ $group->name }}</td>
-                                            <td>{{ $group->code ?? '-' }}</td>
-                                            <td class="text-center">
-                                                {{-- นับจำนวน placement records ที่เกี่ยวข้อง (ถ้าต้องการประสิทธิภาพสูง ควรทำ count ใน query) --}}
-                                                {{ $group->placementRecords()->count() }}
-                                            </td>
-                                            <td class="text-center">
-                                                {{-- ปุ่ม Show (ถ้ามีหน้า Show) --}}
-                                                <a href="{{ route('admin.subject-groups.show', $group->id) }}" class="btn btn-info btn-xs" title="ดูรายละเอียด">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ route('admin.subject-groups.edit', $group->id) }}"
-                                                    class="btn btn-warning btn-xs" title="แก้ไข">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <button class="btn btn-danger btn-xs delete-button"
-                                                    data-id="{{ $group->id }}" data-name="{{ $group->name }}"
-                                                    title="ลบ">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                                <form id="delete-form-{{ $group->id }}"
-                                                    action="{{ route('admin.subject-groups.destroy', $group->id) }}"
-                                                    method="POST" style="display: none;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
-                                            </td>
+                                            <th style="width: 10px" class="text-nowrap">#</th>
+                                            <th class="text-nowrap">ชื่อกลุ่มวิชาเอก</th>
+                                            <th class="text-nowrap">รหัสกลุ่มวิชา</th>
+                                            <th class="text-center text-nowrap" style="width: 100px;">จำนวน<br>รายการบรรจุ
+                                            </th> {{-- อาจจะแบ่งบรรทัดถ้าชื่อยาว --}}
+                                            <th class="text-center text-nowrap" style="width: 150px;">การดำเนินการ</th>
+                                            {{-- กำหนด min-width ให้คอลัมน์นี้ --}}
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($subjectGroups as $index => $group)
+                                            <tr>
+                                                <td>{{ $subjectGroups->firstItem() + $index }}</td>
+                                                <td>{{ $group->name }}</td>
+                                                <td>{{ $group->code ?? '-' }}</td>
+                                                <td class="text-center">
+                                                    {{-- $group->placementRecords()->count() --}}
+                                                    {{-- ถ้าใช้ withCount ใน Controller ให้ใช้ชื่อ property ที่ถูกสร้างขึ้น --}}
+                                                    {{ $group->placement_records_count ?? $group->placementRecords()->count() }}
+                                                </td>
+                                                <td class="text-right">
+                                                    {{-- ปุ่มต่างๆ ใช้ btn-group เพื่อจัดกลุ่มปุ่ม --}}
+                                                    <div class="btn-group btn-group-xs" role="group" aria-label="Actions">
+                                                        {{-- ห่อปุ่มด้วย btn-group --}}
+                                                        <a href="{{ route('admin.subject-groups.show', $group->id) }}"
+                                                            class="btn btn-info" title="ดูรายละเอียด">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="{{ route('admin.subject-groups.edit', $group->id) }}"
+                                                            class="btn btn-warning" title="แก้ไข">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button class="btn btn-danger delete-button"
+                                                            data-id="{{ $group->id }}" data-name="{{ $group->name }}"
+                                                            title="ลบ">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    </div>
+                                                    <form id="delete-form-{{ $group->id }}"
+                                                        action="{{ route('admin.subject-groups.destroy', $group->id) }}"
+                                                        method="POST" style="display: none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div> {{-- ปิด div.table-responsive --}}
                         @else
-                            <div class="alert alert-warning text-center m-3">
-                                <i class="fas fa-exclamation-triangle mr-2"></i> ไม่พบข้อมูลกลุ่มวิชาเอก
-                                @if (request('search'))
-                                    ตามคำค้นหา "{{ request('search') }}"
-                                @endif
-                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info text-center">
+                                    <strong>ไม่พบข้อมูลกลุ่มวิชาเอก</strong><br>
+                                    กรุณาเพิ่มกลุ่มวิชาเอกใหม่หรือลองค้นหาด้วยคำอื่น
+                                </div>
+                                {{-- ... (ส่วนไม่พบข้อมูล) ... --}}
                         @endif
                     </div>
                     <!-- /.card-body -->
