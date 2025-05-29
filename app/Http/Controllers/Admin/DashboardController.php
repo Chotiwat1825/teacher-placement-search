@@ -65,21 +65,26 @@ class DashboardController extends Controller
             ->groupBy('month_year')
             ->orderBy('month_year', 'asc')
             ->pluck('count', 'month_year');
+        $topSubjectGroups = DB::table('placement_record_subject_group')
+            ->join('subject_groups', 'placement_record_subject_group.subject_group_id', '=', 'subject_groups.id')
+            ->selectRaw('subject_groups.name, count(placement_record_subject_group.placement_record_id) as count')
+            ->groupBy('subject_groups.name') // หรือ subject_groups.id, subject_groups.name
+            ->orderBy('count', 'desc')
+            ->take(5)
+            ->pluck('count', 'name');
 
-        return view(
-            'admin.dashboard',
-            compact(
-                'totalPlacements',
-                'totalEducationalAreas',
-                'totalSubjectGroups',
-                'placementsThisMonth',
-                'activeUsers',
-                // 'pendingApprovals',
-                'latestPlacements',
-                'placementCountsByYear',
-                'placementsByAreaType',
-                'topEducationalAreas',
-                'monthlyPlacements',
+        return view('admin.dashboard', compact(
+        'totalPlacements',
+        'totalEducationalAreas',
+        'totalSubjectGroups',
+        'placementsThisMonth',
+        'activeUsers',
+        'latestPlacements',
+        'placementCountsByYear',
+        'placementsByAreaType',
+        'topEducationalAreas',
+        'monthlyPlacements',
+        'topSubjectGroups',
             ),
         );
     }
