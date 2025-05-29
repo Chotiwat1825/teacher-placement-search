@@ -256,7 +256,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
+    'dashboard_url' => 'admin/dashboard',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -326,35 +326,49 @@ return [
             // 'label'       => 4,
             // 'label_color' => 'success',
         ],
+        //[
+        //    'text' => 'การจัดการข้อมูลหลัก',
+        //    'icon' => 'fas fa-fw fa-cogs',
+        //    // ตรวจสอบว่า route ปัจจุบันขึ้นต้นด้วย 'admin.educational-areas.' หรือ 'admin.subject-groups.'
+        //    // ถ้าใช่ ให้เมนูนี้ active และ submenu จะเปิดออก
+        //    'active' => [
+        //        'admin.educational-areas.*', // ใช้ wildcard * เพื่อจับคู่ทุก route ใน resource นี้
+        //        'admin.subject-groups.*',
+        //        // เพิ่ม route patterns อื่นๆ ของ submenu ที่นี่ถ้ามี
+        //    ],
+        //    'submenu' => [
+        //        [
+        //            'text' => 'จัดการเขตพื้นที่การศึกษา',
+        //            'route' => 'admin.educational-areas.index',
+        //            'icon' => 'fas fa-fw fa-map-marked-alt',
+        //            'active' => ['admin.educational-areas.*'], // ทำให้ submenu นี้ active ด้วย
+        //        ],
+        //        [
+        //           'text' => 'จัดการกลุ่มวิชาเอก',
+        //           'route' => 'admin.subject-groups.index',
+         //           'icon' => 'fas fa-fw fa-book-open',
+         //           'active' => ['admin.subject-groups.*'], // ทำให้ submenu นี้ active ด้วย
+        //       ],
+         //       // ... (submenu อื่นๆ) ...
+        //    ],
+        //],
+        ['header' => 'การจัดการข้อมูลหลัก'],
         [
-            'text' => 'การจัดการข้อมูลหลัก',
-            'icon' => 'fas fa-fw fa-cogs',
-            // ตรวจสอบว่า route ปัจจุบันขึ้นต้นด้วย 'admin.educational-areas.' หรือ 'admin.subject-groups.'
-            // ถ้าใช่ ให้เมนูนี้ active และ submenu จะเปิดออก
-            'active' => [
-                'admin.educational-areas.*', // ใช้ wildcard * เพื่อจับคู่ทุก route ใน resource นี้
-                'admin.subject-groups.*',
-                // เพิ่ม route patterns อื่นๆ ของ submenu ที่นี่ถ้ามี
-            ],
-            'submenu' => [
-                [
-                    'text' => 'จัดการเขตพื้นที่การศึกษา',
-                    'route' => 'admin.educational-areas.index',
-                    'icon' => 'fas fa-fw fa-map-marked-alt',
-                    'active' => ['admin.educational-areas.*'], // ทำให้ submenu นี้ active ด้วย
-                ],
-                [
-                    'text' => 'จัดการกลุ่มวิชาเอก',
-                    'route' => 'admin.subject-groups.index',
-                    'icon' => 'fas fa-fw fa-book-open',
-                    'active' => ['admin.subject-groups.*'], // ทำให้ submenu นี้ active ด้วย
-                ],
-                // ... (submenu อื่นๆ) ...
-            ],
+            'text' => 'จัดการเขตพื้นที่การศึกษา',
+            'route' => 'admin.educational-areas.index',
+            'icon' => 'fas fa-fw fa-map-marked-alt',
+            // 'can'  => 'manage-educational-areas',
         ],
+        [
+            'text' => 'จัดการกลุ่มวิชาเอก',
+            'route' => 'admin.subject-groups.index',
+            'icon' => 'fas fa-fw fa-book-open',
+            // 'can'  => 'manage-subject-groups',
+        ],
+        ['header' => 'การจัดการข้อมูลครู'],
         // ==================================================================
         [
-            'text' => 'ข้อมูลการบรรจุครู',
+            'text' => 'สร้างข้อมูลการบรรจุครู',
             'route' => 'admin.placement-records.index',
             'icon' => 'fas fa-fw fa-file-alt',
             // 'can'  => 'manage-placement-records',
