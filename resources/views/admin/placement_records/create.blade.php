@@ -52,7 +52,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="academic_year">ปีการบรรจุ (พ.ศ.) <span
+                                        <label for="academic_year">บัญชีปี (พ.ศ.) <span
                                                 class="text-danger">*</span></label>
                                         <select name="academic_year" id="academic_year"
                                             class="form-control @error('academic_year') is-invalid @enderror">
@@ -72,27 +72,31 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="announcement_date">
-                                            <i class="fas fa-calendar-alt text-primary mr-1"></i>
+                                        <label for="announcement_date"> {{-- ไม่จำเป็นต้องมี icon ใน label ถ้าจะใช้ input-group --}}
                                             วันที่ประกาศ <span class="text-danger">*</span>
                                         </label>
-                                        <div class="input-group">
+                                        <div class="input-group flatpickr" data-wrap="true" data-click-opens="true">
+                                            {{-- เพิ่ม data-wrap และ data-click-opens --}}
                                             <input type="text" name="announcement_date" id="announcement_date"
-                                                class="form-control flatpickr @error('announcement_date') is-invalid @enderror"
-                                                value="{{ old('announcement_date') }}" placeholder="ปปปป-ดด-วว" required
-                                                autocomplete="off">
-                                            <div class="input-group-append" data-toggle="flatpickr"
-                                                data-target="#announcement_date" style="cursor:pointer;">
-                                                <span class="input-group-text bg-white border-left-0">
+                                                class="form-control @error('announcement_date') is-invalid @enderror"
+                                                value="{{ old('announcement_date') }}" placeholder="เลือกวันที่..."
+                                                required data-input> {{-- เพิ่ม data-input สำหรับ Flatpickr --}}
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" title="เลือกวันที่"
+                                                    data-toggle> {{-- ใช้ data-toggle --}}
                                                     <i class="fas fa-calendar-alt text-info"></i>
-                                                </span>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" type="button" title="ล้างวันที่"
+                                                    data-clear> {{-- ใช้ data-clear --}}
+                                                    <i class="fas fa-times text-danger"></i>
+                                                </button>
                                             </div>
-                                            @error('announcement_date')
-                                                <span class="invalid-feedback d-block">{{ $message }}</span>
-                                            @enderror
                                         </div>
+                                        @error('announcement_date')
+                                            <span class="invalid-feedback d-block">{{ $message }}</span>
+                                        @enderror
                                         <small class="form-text text-muted">
-                                            เลือกวันที่ประกาศผลการบรรจุ (คลิกที่ไอคอนปฏิทิน)
+                                            เลือกวันที่ ค.ศ. จะถูกแปลงเป็น พ.ศ. ในการบันทึก
                                         </small>
                                     </div>
                                 </div>
@@ -250,96 +254,148 @@
 @stop
 
 @section('css')
-@section('plugins.Select2', true) {{-- ยังคงใช้ Select2 สำหรับ Educational Area --}}
-
+@section('plugins.Select2', true)
 <style>
     .offset-md-1 {
         margin-left: 8.333333%;
     }
-
 
     .custom-file-label::after {
         content: "เลือก..." !important;
     }
 
     .border.rounded.bg-light {
-        /* Style for checkbox container */
         padding: 1rem;
     }
 
     .form-check {
         margin-bottom: 0.5rem;
-        /* Spacing between checkboxes */
+    }
+
+    /* Optional: Adjust input-group styling for Flatpickr if needed */
+    .input-group.flatpickr .form-control[readonly] {
+        background-color: #fff;
+        /* Make readonly input look normal */
+    }
+
+    .input-group.flatpickr .input-group-append .btn {
+        border-left-width: 0;
+        /* Remove double border */
+    }
+
+    .input-group.flatpickr .input-group-append .btn:focus {
+        box-shadow: none;
     }
 </style>
 @stop
 
 @section('js')
-
 <script>
-    $('.select2-ea').select2({
-        theme: 'bootstrap4',
-        placeholder: '-- เลือกเขตพื้นที่ฯ --',
-        allowClear: true,
-        width: '100%',
-        dropdownAutoWidth: true
-    }).on('select2:open', function() {
-        $('.select2-results__options').addClass('bg-light');
-    });
-    // Initialize bsCustomFileInput
-    bsCustomFileInput.init();
-    // Attachment previews
-    $('#attachments').on('change', function() {
-        var files = $(this)[0].files;
-        var previewContainer = $('#attachment-previews');
-        previewContainer.html('');
-        if (files.length > 0) {
-            var list = $('<ul class="list-unstyled"></ul>');
-            for (var i = 0; i < files.length; i++) {
-                var file = files[i];
-                var listItem = $('<li></li>').addClass('text-sm text-muted mb-1');
-                var icon = '<i class="fas fa-file mr-2"></i>';
-                if (file.type.startsWith('image/')) {
-                    icon = '<i class="fas fa-image text-success mr-2"></i>';
-                } else if (file.type === 'application/pdf') {
-                    icon = '<i class="fas fa-file-pdf text-danger mr-2"></i>';
-                }
-                listItem.html(icon + file.name + ' (' + (file.size / 1024).toFixed(2) +
-                    ' KB)');
-                list.append(listItem);
-            }
-            previewContainer.append('<h6>ไฟล์ที่เลือกใหม่:</h6>').append(list);
-        }
-    });
     $(document).ready(function() {
-        document.addEventListener('DOMContentLoaded', function() {
-            const announcementDateInput = document.getElementById("announcement_date");
-            if (announcementDateInput) {
-                flatpickr(announcementDateInput, { // Initialize เฉพาะ element นี้
-                    dateFormat: "Y-m-d",
-                    altInput: true,
-                    altFormat: "j F Y",
-                    allowInput: false,
-                    // locale: "th",
-                    disableMobile: "true",
-                    locale: {
-                        firstDayOfWeek: 1
-                    }
-                });
-            } else {
-                console.warn("Flatpickr target #announcement_date not found.");
-            }
+        // 1. Initialize Select2 for Educational Area
+        $('#educational_area_id.select2-ea').select2({
+            theme: 'bootstrap4',
+            placeholder: '-- เลือกเขตพื้นที่ฯ --',
+            allowClear: true,
+            width: '100%',
+            dropdownAutoWidth: true
+        });
+        // .on('select2:open', function() { // Optional: style dropdown
+        //     $('.select2-results__options').addClass('bg-light');
+        // });
 
-            // Event listener for the calendar icon (ยังใช้ jQuery ได้ถ้าต้องการ)
-            $('[data-toggle="flatpickr"]').on('click', function() {
-                var targetSelector = $(this).data('target');
-                if (targetSelector) {
-                    const targetInputEl = document.querySelector(targetSelector);
-                    if (targetInputEl && targetInputEl._flatpickr) {
-                        targetInputEl._flatpickr.toggle();
-                    }
-                }
+        // 2. Initialize Flatpickr for Announcement Date
+        //    ใช้ประโยชน์จาก data attributes ของ Flatpickr (wrap, data-input, data-toggle, data-clear)
+        if (document.querySelector(".flatpickr[data-wrap='true']")) {
+            // ตั้งค่า Locale ภาษาไทยให้กับ Flatpickr ทุก instance ในหน้านี้ (ถ้าต้องการ)
+            // หรือจะตั้งเฉพาะ instance ก็ได้
+            flatpickr.localize(flatpickr.l10ns.th); // <<<< เพิ่มบรรทัดนี้
+
+            flatpickr(".flatpickr[data-wrap='true']", {
+                wrap: true,
+                altInput: true,
+                // altFormat: "j F Y", // เดิมจะแสดงปีเป็น ค.ศ. เช่น 1 มกราคม 2024
+                altFormat: "j F พ.ศ. Y", // <<<< ปรับ altFormat ให้แสดง "พ.ศ." และปีเป็น ค.ศ. (เราจะ format ปีอีกที)
+                dateFormat: "Y-m-d", // Format ที่ส่งไป server ยังคงเป็น Y-m-d (ค.ศ.)
+                allowInput: false,
+                // locale: "th", // <<<< หรือจะใส่ locale: "th" ที่นี่ก็ได้ ถ้า localize() ด้านบนแล้วก็ไม่จำเป็นซ้ำ
+                disableMobile: "true",
+                // เพิ่ม onChange เพื่อปรับการแสดงผลปีเป็น พ.ศ. ใน altInput
+                onReady: function(selectedDates, dateStr, instance) {
+                    formatAltInputYearToBE(instance);
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    formatAltInputYearToBE(instance);
+                },
+                // onClose: function(selectedDates, dateStr, instance){ // อาจจะทำตอน close ด้วย
+                //     formatAltInputYearToBE(instance);
+                // }
             });
+        } else {
+            console.warn("Flatpickr target with data-wrap='true' not found.");
+        }
+
+        // Helper function to format year in altInput to B.E.
+        function formatAltInputYearToBE(instance) {
+            if (instance.altInput && instance.selectedDates.length > 0) {
+                const selectedDate = instance.selectedDates[0];
+                const yearCE = selectedDate.getFullYear();
+                const yearBE = yearCE + 543;
+                // สร้าง date string ใหม่ด้วยปี พ.ศ. และ format เดิมของ altFormat แต่เปลี่ยน Y
+                // เราต้องระวังเรื่องการ parse "พ.ศ." ออกจาก altFormat เดิม
+                let currentAltFormat = instance.config.altFormat;
+                // Format: "j F พ.ศ. Y"
+                let formattedDate = "";
+                // ใช้ moment.js หรือ date-fns ถ้าต้องการความยืดหยุ่นในการ format สูง
+                // หรือ format เองแบบง่ายๆ
+                const day = selectedDate.getDate();
+                const monthIndex = selectedDate.getMonth(); // 0-11
+                const thaiMonths = instance.l10n.months.longhand; // ดึงชื่อเดือนไทยจาก locale
+
+                if (currentAltFormat.includes("พ.ศ.")) {
+                    formattedDate = `${day} ${thaiMonths[monthIndex]} พ.ศ. ${yearBE}`;
+                } else {
+                    formattedDate =
+                        `${day} ${thaiMonths[monthIndex]} ${yearBE}`; // ถ้าไม่มี "พ.ศ." ใน format ก็แค่ใส่ปี พ.ศ.
+                }
+                instance.altInput.value = formattedDate;
+            } else if (instance.altInput && instance.selectedDates.length === 0) {
+                instance.altInput.value = ''; // Clear if no date selected
+            }
+        }
+
+
+        // 3. Initialize BsCustomFileInput
+        // Initialize Select2 for Educational Area
+        $('.select2-ea').select2({
+            theme: 'bootstrap4',
+            placeholder: $(this).data('placeholder') || '-- เลือกเขตพื้นที่ฯ --',
+            allowClear: true
+        });
+        // Initialize bsCustomFileInput
+        bsCustomFileInput.init();
+        // Attachment previews
+        $('#attachments').on('change', function() {
+            var files = $(this)[0].files;
+            var previewContainer = $('#attachment-previews');
+            previewContainer.html('');
+            if (files.length > 0) {
+                var list = $('<ul class="list-unstyled"></ul>');
+                for (var i = 0; i < files.length; i++) {
+                    var file = files[i];
+                    var listItem = $('<li></li>').addClass('text-sm text-muted mb-1');
+                    var icon = '<i class="fas fa-file mr-2"></i>';
+                    if (file.type.startsWith('image/')) {
+                        icon = '<i class="fas fa-image text-success mr-2"></i>';
+                    } else if (file.type === 'application/pdf') {
+                        icon = '<i class="fas fa-file-pdf text-danger mr-2"></i>';
+                    }
+                    listItem.html(icon + file.name + ' (' + (file.size / 1024).toFixed(2) +
+                        ' KB)');
+                    list.append(listItem);
+                }
+                previewContainer.append('<h6>ไฟล์ที่เลือกใหม่:</h6>').append(list);
+            }
         });
     });
 </script>

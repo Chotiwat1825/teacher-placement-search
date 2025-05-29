@@ -469,9 +469,29 @@ return [
                     'location' => 'https://cdn.jsdelivr.net/npm/flatpickr',
                 ],
                 [
+                    'type' => 'js',
+                    'asset' => false,
+                    'location' => 'https://npmcdn.com/flatpickr/dist/l10n/th.js',
+                ],
+                [
                     'type' => 'css',
                     'asset' => false,
                     'location' => 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css',
+                ],
+            ],
+        ],
+        'bsCustomFileInput' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => false,
+                    'location' => 'https://cdn.jsdelivr.net/npm/bs-custom-file-input@1.3.4/dist/bs-custom-file-input.min.js',
+                ],
+                [
+                    'type' => 'js',
+                    'asset' => false,
+                    'location' => 'https://cdnjs.cloudflare.com/ajax/libs/bs-custom-file-input/1.3.4/bs-custom-file-input.js',
                 ],
             ],
         ],

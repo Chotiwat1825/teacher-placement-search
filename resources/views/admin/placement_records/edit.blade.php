@@ -56,7 +56,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="academic_year">ปีการบรรจุ (พ.ศ.) <span
+                                        <label for="academic_year">บัญชีปี (พ.ศ.) <span
                                                 class="text-danger">*</span></label>
                                         <select name="academic_year" id="academic_year"
                                             class="form-control @error('academic_year') is-invalid @enderror" required>
@@ -75,15 +75,32 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="announcement_date">วันที่ประกาศ <span
-                                                class="text-danger">*</span></label>
-                                        <input type="text" name="announcement_date" id="announcement_date"
-                                            class="form-control flatpickr @error('announcement_date') is-invalid @enderror"
-                                            value="{{ old('announcement_date', $placementRecord->announcement_date ? $placementRecord->announcement_date->format('Y-m-d') : '') }}"
-                                            placeholder="เลือกวันที่ประกาศ" required>
+                                        <label for="announcement_date"> {{-- ไม่จำเป็นต้องมี icon ใน label ถ้าจะใช้ input-group --}}
+                                            วันที่ประกาศ <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group flatpickr" data-wrap="true" data-click-opens="true">
+                                            {{-- เพิ่ม data-wrap และ data-click-opens --}}
+                                            <input type="text" name="announcement_date" id="announcement_date"
+                                                class="form-control @error('announcement_date') is-invalid @enderror"
+                                                value="{{ old('announcement_date') }}" placeholder="เลือกวันที่..."
+                                                required data-input> {{-- เพิ่ม data-input สำหรับ Flatpickr --}}
+                                            <div class="input-group-append">
+                                                <button class="btn btn-outline-secondary" type="button" title="เลือกวันที่"
+                                                    data-toggle> {{-- ใช้ data-toggle --}}
+                                                    <i class="fas fa-calendar-alt text-info"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" type="button" title="ล้างวันที่"
+                                                    data-clear> {{-- ใช้ data-clear --}}
+                                                    <i class="fas fa-times text-danger"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                         @error('announcement_date')
-                                            <span class="invalid-feedback">{{ $message }}</span>
+                                            <span class="invalid-feedback d-block">{{ $message }}</span>
                                         @enderror
+                                        <small class="form-text text-muted">
+                                            เลือกวันที่ ค.ศ. จะถูกแปลงเป็น พ.ศ. ในการบันทึก
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -308,14 +325,69 @@
             allowClear: true
         });
 
-        // Initialize Flatpickr
-        $('.flatpickr').flatpickr({
-            altInput: true,
-            altFormat: "j F Y",
-            dateFormat: "Y-m-d",
-            allowInput: true,
-            disableMobile: "true"
-        });
+        // .on('select2:open', function() { // Optional: style dropdown
+        //     $('.select2-results__options').addClass('bg-light');
+        // });
+
+        // 2. Initialize Flatpickr for Announcement Date
+        //    ใช้ประโยชน์จาก data attributes ของ Flatpickr (wrap, data-input, data-toggle, data-clear)
+        if (document.querySelector(".flatpickr[data-wrap='true']")) {
+            // ตั้งค่า Locale ภาษาไทยให้กับ Flatpickr ทุก instance ในหน้านี้ (ถ้าต้องการ)
+            // หรือจะตั้งเฉพาะ instance ก็ได้
+            flatpickr.localize(flatpickr.l10ns.th); // <<<< เพิ่มบรรทัดนี้
+
+            flatpickr(".flatpickr[data-wrap='true']", {
+                wrap: true,
+                altInput: true,
+                // altFormat: "j F Y", // เดิมจะแสดงปีเป็น ค.ศ. เช่น 1 มกราคม 2024
+                altFormat: "j F พ.ศ. Y", // <<<< ปรับ altFormat ให้แสดง "พ.ศ." และปีเป็น ค.ศ. (เราจะ format ปีอีกที)
+                dateFormat: "Y-m-d", // Format ที่ส่งไป server ยังคงเป็น Y-m-d (ค.ศ.)
+                allowInput: false,
+                // locale: "th", // <<<< หรือจะใส่ locale: "th" ที่นี่ก็ได้ ถ้า localize() ด้านบนแล้วก็ไม่จำเป็นซ้ำ
+                disableMobile: "true",
+                // เพิ่ม onChange เพื่อปรับการแสดงผลปีเป็น พ.ศ. ใน altInput
+                onReady: function(selectedDates, dateStr, instance) {
+                    formatAltInputYearToBE(instance);
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    formatAltInputYearToBE(instance);
+                },
+                // onClose: function(selectedDates, dateStr, instance){ // อาจจะทำตอน close ด้วย
+                //     formatAltInputYearToBE(instance);
+                // }
+            });
+        } else {
+            console.warn("Flatpickr target with data-wrap='true' not found.");
+        }
+
+        // Helper function to format year in altInput to B.E.
+        function formatAltInputYearToBE(instance) {
+            if (instance.altInput && instance.selectedDates.length > 0) {
+                const selectedDate = instance.selectedDates[0];
+                const yearCE = selectedDate.getFullYear();
+                const yearBE = yearCE + 543;
+                // สร้าง date string ใหม่ด้วยปี พ.ศ. และ format เดิมของ altFormat แต่เปลี่ยน Y
+                // เราต้องระวังเรื่องการ parse "พ.ศ." ออกจาก altFormat เดิม
+                let currentAltFormat = instance.config.altFormat;
+                // Format: "j F พ.ศ. Y"
+                let formattedDate = "";
+                // ใช้ moment.js หรือ date-fns ถ้าต้องการความยืดหยุ่นในการ format สูง
+                // หรือ format เองแบบง่ายๆ
+                const day = selectedDate.getDate();
+                const monthIndex = selectedDate.getMonth(); // 0-11
+                const thaiMonths = instance.l10n.months.longhand; // ดึงชื่อเดือนไทยจาก locale
+
+                if (currentAltFormat.includes("พ.ศ.")) {
+                    formattedDate = `${day} ${thaiMonths[monthIndex]} พ.ศ. ${yearBE}`;
+                } else {
+                    formattedDate =
+                        `${day} ${thaiMonths[monthIndex]} ${yearBE}`; // ถ้าไม่มี "พ.ศ." ใน format ก็แค่ใส่ปี พ.ศ.
+                }
+                instance.altInput.value = formattedDate;
+            } else if (instance.altInput && instance.selectedDates.length === 0) {
+                instance.altInput.value = ''; // Clear if no date selected
+            }
+        }
 
         // BsCustomFileInput
         bsCustomFileInput.init();
