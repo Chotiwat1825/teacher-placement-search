@@ -97,33 +97,35 @@
                                                 <td>{{ $userAccount->email_verified_at ? $userAccount->email_verified_at->format('d M Y H:i') : 'ยังไม่ได้ยืนยัน' }}
                                                 </td>
                                                 <td class="text-center">
-                                                    <a href="{{ route('admin.users.show', $userAccount->id) }}"
-                                                        class="btn btn-info btn-xs" title="ดูรายละเอียด">
-                                                        <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a href="{{ route('admin.users.edit', $userAccount->id) }}"
-                                                        class="btn btn-warning btn-xs" title="แก้ไข">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    @if (Auth::id() !== $userAccount->id)
-                                                        {{-- ไม่ให้ลบตัวเอง --}}
-                                                        <button class="btn btn-danger btn-xs delete-button"
-                                                            data-id="{{ $userAccount->id }}"
-                                                            data-name="{{ $userAccount->name }}" title="ลบ">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                        <form id="delete-form-{{ $userAccount->id }}"
-                                                            action="{{ route('admin.users.destroy', $userAccount->id) }}"
-                                                            method="POST" style="display: none;">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                        </form>
-                                                    @else
-                                                        <button class="btn btn-secondary btn-xs" disabled
-                                                            title="ไม่สามารถลบตัวเองได้">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    @endif
+                                                    <div class="btn-group btn-group-xs" role="group" aria-label="Actions">
+                                                        <a href="{{ route('admin.users.show', $userAccount->id) }}"
+                                                            class="btn btn-info btn-group-xs" title="ดูรายละเอียด">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="{{ route('admin.users.edit', $userAccount->id) }}"
+                                                            class="btn btn-warning btn-group-xs" title="แก้ไข">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        @if (Auth::id() !== $userAccount->id)
+                                                            {{-- ไม่ให้ลบตัวเอง --}}
+                                                            <button class="btn btn-danger delete-button btn-group-xs"
+                                                                data-id="{{ $userAccount->id }}"
+                                                                data-name="{{ $userAccount->name }}" title="ลบ">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                            <form id="delete-form-{{ $userAccount->id }}"
+                                                                action="{{ route('admin.users.destroy', $userAccount->id) }}"
+                                                                method="POST" style="display: none;">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                            </form>
+                                                        @else
+                                                            <button class="btn btn-secondary btn-group-xs" disabled
+                                                                title="ไม่สามารถลบตัวเองได้">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        @endif
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @endforeach

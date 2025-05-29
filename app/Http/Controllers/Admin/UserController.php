@@ -5,24 +5,20 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth; // เพิ่ม Auth Facade
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
-// เพิ่ม Form Requests ในภายหลัง:
-// use App\Http\Requests\Admin\StoreUserRequest;
-// use App\Http\Requests\Admin\UpdateUserRequest;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\View\View
-     */
     public function index(Request $request)
     {
-        $query = User::query()->orderBy('name', 'asc');
+        $query = User::query()
+            ->where('id', '!=', Auth::id()) // <<<< เพิ่มเงื่อนไขนี้
+            ->orderBy('name', 'asc');
 
         // Search functionality
         if ($request->filled('search_term')) {
@@ -43,7 +39,13 @@ class UserController extends Controller
 
         $users = $query->paginate(15)->withQueryString();
 
+        // คำนวณ total users ที่แสดงผล (ไม่รวมตัวเอง)
+        // ถ้าต้องการแสดงจำนวนผู้ใช้ทั้งหมดจริงๆ (รวมตัวเอง) อาจจะต้อง query แยก
+        // $totalUsersInSystem = User::count();
+
         return view('admin.users.index', compact('users'));
+        // ถ้าต้องการ $totalUsersInSystem ก็ส่งไปด้วย
+        // return view('admin.users.index', compact('users', 'totalUsersInSystem'));
     }
 
     /**
