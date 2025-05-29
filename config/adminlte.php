@@ -366,15 +366,15 @@ return [
         //     'label' => 4,
         //     'label_color' => 'success',
         // ],
-        ['header' => 'account_settings'],
+        ['header' => 'ตั้งค่า'],
         [
-            'text' => 'profile',
-            'url' => 'admin/settings',
+            'text' => 'แก้ไขโปรไฟล์',
+            'route' => 'admin.profile.edit',
             'icon' => 'fas fa-fw fa-user',
         ],
         [
-            'text' => 'change_password',
-            'url' => 'admin/settings',
+            'text' => 'เปลี่ยนรหัสผ่าน',
+            'route' => 'admin.password.edit',
             'icon' => 'fas fa-fw fa-lock',
         ],
         // [

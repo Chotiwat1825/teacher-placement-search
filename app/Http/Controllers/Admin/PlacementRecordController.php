@@ -85,12 +85,7 @@ class PlacementRecordController extends Controller
         $LastYear = $currentThaiYear - 1;
         $academicYears = range($currentThaiYear + 3, $currentThaiYear - 5); // สร้างช่วงปี เช่น 2570 ถึง 2562
 
-        return view('admin.placement_records.create', compact(
-            'educationalAreas',
-            'subjectGroups',
-            'academicYears',
-            'LastYear'
-        ));
+        return view('admin.placement_records.create', compact('educationalAreas', 'subjectGroups', 'academicYears', 'LastYear'));
     }
 
     // (ควรใช้ Form Request สำหรับ store, update)
