@@ -74,12 +74,18 @@
                                     <div class="form-group">
                                         <label for="announcement_date">วันที่ประกาศ <span
                                                 class="text-danger">*</span></label>
-                                        <input type="text" name="announcement_date" id="announcement_date"
-                                            class="form-control flatpickr @error('announcement_date') is-invalid @enderror"
-                                            value="{{ old('announcement_date') }}" placeholder="ปปปป-ดด-วว">
-                                        @error('announcement_date')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
+                                        <div class="input-group">
+                                            <input type="text" name="announcement_date" id="announcement_date"
+                                                class="form-control flatpickr" {{-- ใช้ class "flatpickr" (lowercase) เพื่อให้ JS จับคู่ได้ --}}
+                                                value="{{ old('announcement_date') }}" placeholder="ปปปป-ดด-วว" required>
+                                            <div class="input-group-append" data-toggle="flatpickr"
+                                                data-target="#announcement_date">
+                                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                            </div>
+                                            @error('announcement_date')
+                                                <span class="invalid-feedback d-block">{{ $message }}</span>
+                                            @enderror
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -237,6 +243,7 @@
 
 @section('css')
 @section('plugins.Select2', true) {{-- ยังคงใช้ Select2 สำหรับ Educational Area --}}
+
 <style>
     .offset-md-1 {
         margin-left: 8.333333%;
@@ -262,42 +269,66 @@
 
 <script>
     $(document).ready(function() {
-        // Initialize Select2 for Educational Area
-        $('.select2-ea').select2({
-            theme: 'bootstrap4',
-            placeholder: $(this).data('placeholder') || '-- เลือกเขตพื้นที่ฯ --',
-            allowClear: true
-        });
-        // Initialize Flatpickr for date input
-        $('.flatpickr').flatpickr({
-            dateFormat: 'Y-m-d',
-            locale: {
-                firstDayOfWeek: 1 // Start week on Monday
-            }
-        });
-        // Initialize bsCustomFileInput
-        bsCustomFileInput.init();
-        // Attachment previews
-        $('#attachments').on('change', function() {
-            var files = $(this)[0].files;
-            var previewContainer = $('#attachment-previews');
-            previewContainer.html('');
-            if (files.length > 0) {
-                var list = $('<ul class="list-unstyled"></ul>');
-                for (var i = 0; i < files.length; i++) {
-                    var file = files[i];
-                    var listItem = $('<li></li>').addClass('text-sm text-muted mb-1');
-                    var icon = '<i class="fas fa-file mr-2"></i>';
-                    if (file.type.startsWith('image/')) {
-                        icon = '<i class="fas fa-image text-success mr-2"></i>';
-                    } else if (file.type === 'application/pdf') {
-                        icon = '<i class="fas fa-file-pdf text-danger mr-2"></i>';
+        document.addEventListener('DOMContentLoaded', function() {
+            const announcementDateInput = document.getElementById("announcement_date");
+            if (announcementDateInput) {
+                flatpickr(announcementDateInput, { // Initialize เฉพาะ element นี้
+                    dateFormat: "Y-m-d",
+                    altInput: true,
+                    altFormat: "j F Y",
+                    allowInput: false,
+                    // locale: "th",
+                    disableMobile: "true",
+                    locale: {
+                        firstDayOfWeek: 1
                     }
-                    listItem.html(icon + file.name + ' (' + (file.size / 1024).toFixed(2) + ' KB)');
-                    list.append(listItem);
-                }
-                previewContainer.append('<h6>ไฟล์ที่เลือกใหม่:</h6>').append(list);
+                });
+            } else {
+                console.warn("Flatpickr target #announcement_date not found.");
             }
+
+            // Event listener for the calendar icon (ยังใช้ jQuery ได้ถ้าต้องการ)
+            $('[data-toggle="flatpickr"]').on('click', function() {
+                var targetSelector = $(this).data('target');
+                if (targetSelector) {
+                    const targetInputEl = document.querySelector(targetSelector);
+                    if (targetInputEl && targetInputEl._flatpickr) {
+                        targetInputEl._flatpickr.toggle();
+                    }
+                }
+            });
+
+            // Initialize Select2 for Educational Area
+            $('.select2-ea').select2({
+                theme: 'bootstrap4',
+                placeholder: $(this).data('placeholder') || '-- เลือกเขตพื้นที่ฯ --',
+                allowClear: true
+            });
+            // Initialize bsCustomFileInput
+            bsCustomFileInput.init();
+            // Attachment previews
+            $('#attachments').on('change', function() {
+                var files = $(this)[0].files;
+                var previewContainer = $('#attachment-previews');
+                previewContainer.html('');
+                if (files.length > 0) {
+                    var list = $('<ul class="list-unstyled"></ul>');
+                    for (var i = 0; i < files.length; i++) {
+                        var file = files[i];
+                        var listItem = $('<li></li>').addClass('text-sm text-muted mb-1');
+                        var icon = '<i class="fas fa-file mr-2"></i>';
+                        if (file.type.startsWith('image/')) {
+                            icon = '<i class="fas fa-image text-success mr-2"></i>';
+                        } else if (file.type === 'application/pdf') {
+                            icon = '<i class="fas fa-file-pdf text-danger mr-2"></i>';
+                        }
+                        listItem.html(icon + file.name + ' (' + (file.size / 1024).toFixed(2) +
+                            ' KB)');
+                        list.append(listItem);
+                    }
+                    previewContainer.append('<h6>ไฟล์ที่เลือกใหม่:</h6>').append(list);
+                }
+            });
         });
     });
 </script>
