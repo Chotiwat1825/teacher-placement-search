@@ -105,7 +105,7 @@
                                                 <td>{{ $record->educationalArea->name ?? 'N/A' }}</td>
                                                 <td>
                                                     @if ($record->subjectGroups->isNotEmpty())
-                                                        {{ Str::limit($record->subjectGroups->pluck('name')->implode(', '), 0) }}
+                                                        {{ Str::limit($record->subjectGroups->pluck('name')->implode(', '), 50) }}
                                                         {{-- จำกัดความยาวถ้าชื่อยาวมาก --}}
                                                     @else
                                                         <span class="text-muted">N/A</span>
