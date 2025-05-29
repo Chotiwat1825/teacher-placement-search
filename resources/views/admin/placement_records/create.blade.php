@@ -52,8 +52,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="academic_year">บัญชีปี (พ.ศ.) <span
-                                                class="text-danger">*</span></label>
+                                        <label for="academic_year">บัญชีปี (พ.ศ.) <span class="text-danger">*</span></label>
                                         <select name="academic_year" id="academic_year"
                                             class="form-control @error('academic_year') is-invalid @enderror">
                                             <option selected value="{{ $LastYear }}">{{ $LastYear }}</option>
@@ -293,12 +292,14 @@
 <script>
     $(document).ready(function() {
         // 1. Initialize Select2 for Educational Area
-        $('#educational_area_id.select2-ea').select2({
+        $('.select2-ea').select2({
             theme: 'bootstrap4',
-            placeholder: '-- เลือกเขตพื้นที่ฯ --',
+            placeholder: '-- ค้นหาเขตพื้นที่ฯ --',
             allowClear: true,
             width: '100%',
             dropdownAutoWidth: true
+        }).on('select2:open', function() {
+            $('.select2-results__options').addClass('bg-light');
         });
         // .on('select2:open', function() { // Optional: style dropdown
         //     $('.select2-results__options').addClass('bg-light');
@@ -363,15 +364,6 @@
                 instance.altInput.value = ''; // Clear if no date selected
             }
         }
-
-
-        // 3. Initialize BsCustomFileInput
-        // Initialize Select2 for Educational Area
-        $('.select2-ea').select2({
-            theme: 'bootstrap4',
-            placeholder: $(this).data('placeholder') || '-- เลือกเขตพื้นที่ฯ --',
-            allowClear: true
-        });
         // Initialize bsCustomFileInput
         bsCustomFileInput.init();
         // Attachment previews

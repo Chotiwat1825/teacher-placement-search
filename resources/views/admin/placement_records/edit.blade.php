@@ -320,8 +320,12 @@
         // Initialize Select2 for Educational Area
         $('.select2-ea').select2({
             theme: 'bootstrap4',
-            placeholder: $(this).data('placeholder') || '-- เลือกเขตพื้นที่ฯ --',
-            allowClear: true
+            placeholder: '-- เลือกเขตพื้นที่ฯ --',
+            allowClear: true,
+            width: '100%',
+            dropdownAutoWidth: true
+        }).on('select2:open', function() {
+            $('.select2-results__options').addClass('bg-light');
         });
 
         // .on('select2:open', function() { // Optional: style dropdown
