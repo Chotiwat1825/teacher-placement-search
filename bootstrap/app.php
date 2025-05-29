@@ -10,7 +10,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // Laravel จะเพิ่ม default middleware ที่จำเป็นให้โดยอัตโนมัติ
         // เช่น EncryptCookies, StartSession, VerifyCsrfToken ฯลฯ สำหรับ 'web' group
         // และ middleware สำหรับ 'auth' และ 'guest' ก็ควรจะถูกจัดการโดย framework
-
+        $middleware->web(
+            append: [
+                // หรือ $middleware->appendToGroup('web', [
+                \App\Http\Middleware\UpdateLastSeenAt::class,
+            ],
+        );
         // คุณเพียงแค่ต้องเพิ่ม custom aliases ของคุณ
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdminMiddleware::class,
