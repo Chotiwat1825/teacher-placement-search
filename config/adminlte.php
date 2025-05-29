@@ -460,6 +460,21 @@ return [
     */
 
     'plugins' => [
+        'Flatpickr' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type' => 'js',
+                    'asset' => false,
+                    'location' => 'https://cdn.jsdelivr.net/npm/flatpickr',
+                ],
+                [
+                    'type' => 'css',
+                    'asset' => false,
+                    'location' => 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css',
+                ],
+            ],
+        ],
         'Datatables' => [
             'active' => true,
             'files' => [

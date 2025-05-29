@@ -72,20 +72,28 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="announcement_date">วันที่ประกาศ <span
-                                                class="text-danger">*</span></label>
+                                        <label for="announcement_date">
+                                            <i class="fas fa-calendar-alt text-primary mr-1"></i>
+                                            วันที่ประกาศ <span class="text-danger">*</span>
+                                        </label>
                                         <div class="input-group">
                                             <input type="text" name="announcement_date" id="announcement_date"
-                                                class="form-control flatpickr" {{-- ใช้ class "flatpickr" (lowercase) เพื่อให้ JS จับคู่ได้ --}}
-                                                value="{{ old('announcement_date') }}" placeholder="ปปปป-ดด-วว" required>
+                                                class="form-control flatpickr @error('announcement_date') is-invalid @enderror"
+                                                value="{{ old('announcement_date') }}" placeholder="ปปปป-ดด-วว" required
+                                                autocomplete="off">
                                             <div class="input-group-append" data-toggle="flatpickr"
-                                                data-target="#announcement_date">
-                                                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                data-target="#announcement_date" style="cursor:pointer;">
+                                                <span class="input-group-text bg-white border-left-0">
+                                                    <i class="fas fa-calendar-alt text-info"></i>
+                                                </span>
                                             </div>
                                             @error('announcement_date')
                                                 <span class="invalid-feedback d-block">{{ $message }}</span>
                                             @enderror
                                         </div>
+                                        <small class="form-text text-muted">
+                                            เลือกวันที่ประกาศผลการบรรจุ (คลิกที่ไอคอนปฏิทิน)
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -249,6 +257,7 @@
         margin-left: 8.333333%;
     }
 
+
     .custom-file-label::after {
         content: "เลือก..." !important;
     }
@@ -268,6 +277,40 @@
 @section('js')
 
 <script>
+    $('.select2-ea').select2({
+        theme: 'bootstrap4',
+        placeholder: '-- เลือกเขตพื้นที่ฯ --',
+        allowClear: true,
+        width: '100%',
+        dropdownAutoWidth: true
+    }).on('select2:open', function() {
+        $('.select2-results__options').addClass('bg-light');
+    });
+    // Initialize bsCustomFileInput
+    bsCustomFileInput.init();
+    // Attachment previews
+    $('#attachments').on('change', function() {
+        var files = $(this)[0].files;
+        var previewContainer = $('#attachment-previews');
+        previewContainer.html('');
+        if (files.length > 0) {
+            var list = $('<ul class="list-unstyled"></ul>');
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                var listItem = $('<li></li>').addClass('text-sm text-muted mb-1');
+                var icon = '<i class="fas fa-file mr-2"></i>';
+                if (file.type.startsWith('image/')) {
+                    icon = '<i class="fas fa-image text-success mr-2"></i>';
+                } else if (file.type === 'application/pdf') {
+                    icon = '<i class="fas fa-file-pdf text-danger mr-2"></i>';
+                }
+                listItem.html(icon + file.name + ' (' + (file.size / 1024).toFixed(2) +
+                    ' KB)');
+                list.append(listItem);
+            }
+            previewContainer.append('<h6>ไฟล์ที่เลือกใหม่:</h6>').append(list);
+        }
+    });
     $(document).ready(function() {
         document.addEventListener('DOMContentLoaded', function() {
             const announcementDateInput = document.getElementById("announcement_date");
@@ -295,38 +338,6 @@
                     if (targetInputEl && targetInputEl._flatpickr) {
                         targetInputEl._flatpickr.toggle();
                     }
-                }
-            });
-
-            // Initialize Select2 for Educational Area
-            $('.select2-ea').select2({
-                theme: 'bootstrap4',
-                placeholder: $(this).data('placeholder') || '-- เลือกเขตพื้นที่ฯ --',
-                allowClear: true
-            });
-            // Initialize bsCustomFileInput
-            bsCustomFileInput.init();
-            // Attachment previews
-            $('#attachments').on('change', function() {
-                var files = $(this)[0].files;
-                var previewContainer = $('#attachment-previews');
-                previewContainer.html('');
-                if (files.length > 0) {
-                    var list = $('<ul class="list-unstyled"></ul>');
-                    for (var i = 0; i < files.length; i++) {
-                        var file = files[i];
-                        var listItem = $('<li></li>').addClass('text-sm text-muted mb-1');
-                        var icon = '<i class="fas fa-file mr-2"></i>';
-                        if (file.type.startsWith('image/')) {
-                            icon = '<i class="fas fa-image text-success mr-2"></i>';
-                        } else if (file.type === 'application/pdf') {
-                            icon = '<i class="fas fa-file-pdf text-danger mr-2"></i>';
-                        }
-                        listItem.html(icon + file.name + ' (' + (file.size / 1024).toFixed(2) +
-                            ' KB)');
-                        list.append(listItem);
-                    }
-                    previewContainer.append('<h6>ไฟล์ที่เลือกใหม่:</h6>').append(list);
                 }
             });
         });
