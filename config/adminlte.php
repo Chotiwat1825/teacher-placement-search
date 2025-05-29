@@ -346,10 +346,10 @@ return [
         //        [
         //           'text' => 'จัดการกลุ่มวิชาเอก',
         //           'route' => 'admin.subject-groups.index',
-         //           'icon' => 'fas fa-fw fa-book-open',
-         //           'active' => ['admin.subject-groups.*'], // ทำให้ submenu นี้ active ด้วย
+        //           'icon' => 'fas fa-fw fa-book-open',
+        //           'active' => ['admin.subject-groups.*'], // ทำให้ submenu นี้ active ด้วย
         //       ],
-         //       // ... (submenu อื่นๆ) ...
+        //       // ... (submenu อื่นๆ) ...
         //    ],
         //],
         ['header' => 'การจัดการข้อมูลหลัก'],
@@ -372,6 +372,13 @@ return [
             'route' => 'admin.placement-records.index',
             'icon' => 'fas fa-fw fa-file-alt',
             // 'can'  => 'manage-placement-records',
+        ],
+        ['header' => 'การจัดการผู้ใช้งาน'],
+        [
+            'text' => 'จัดการผู้ใช้งาน',
+            'route' => 'admin.users.index',
+            'icon' => 'fas fa-fw fa-users',
+            // 'can'  => 'manage-users',
         ],
         // [
         //     'text' => 'pages',

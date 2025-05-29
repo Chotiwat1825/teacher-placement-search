@@ -17,6 +17,8 @@ use App\Http\Controllers\Admin\PlacementRecordController as AdminPlacementRecord
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\PasswordController as AdminPasswordController;
 
+use App\Http\Controllers\Admin\UserController as AdminUserController; // สำหรับจัดการ User ของ Admin
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -98,6 +100,11 @@ Route::middleware(['auth', 'admin'])
         //
         // โดย {subject_group} คือ ID ของ SubjectGroup (Route Model Binding)
         // =========================================================================
+
+        // =========================================================================
+        // CRUD สำหรับ จัดการผู้ใช้ (Users)
+        // =========================================================================
+        Route::resource('users', AdminUserController::class);
 
         // CRUD สำหรับ ข้อมูลการบรรจุ
         Route::resource('placement-records', AdminPlacementRecordController::class);
