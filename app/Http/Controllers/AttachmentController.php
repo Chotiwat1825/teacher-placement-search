@@ -6,6 +6,7 @@ use App\Models\PlacementAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Support\Str;
 
 class AttachmentController extends Controller
 {
