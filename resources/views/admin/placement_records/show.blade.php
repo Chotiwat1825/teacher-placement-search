@@ -1,7 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'รายละเอียดการบรรจุ: ปี ' . $placementRecord->academic_year . ' - รอบ ' .
-    $placementRecord->round_number)
+@section('title', 'รายละเอียดการบรรจุ: ปี ' . $placementRecord->academic_year . ' - รอบ ' . $placementRecord->round_number)
 
 @section('content_header')
     <div class="row mb-2">
@@ -25,143 +24,106 @@
             <div class="col-md-10 offset-md-1">
                 <div class="card card-info">
                     <div class="card-header">
-                        <h3 class="card-title">
-                            ข้อมูลการบรรจุ: ปี {{ $placementRecord->academic_year }} -
-                            {{ $placementRecord->educationalArea->name ?? 'N/A' }} -
-                            รอบ {{ $placementRecord->round_number }}
-                        </h3>
+                        <h3 class="card-title">ข้อมูลการบรรจุ: ปี {{ $placementRecord->academic_year }} - {{ $placementRecord->educationalArea->name ?? 'N/A' }} - รอบ {{ $placementRecord->round_number }}</h3>
                         <div class="card-tools">
-                            <a href="{{ route('admin.placement-records.edit', $placementRecord->id) }}"
-                                class="btn btn-sm btn-warning" title="แก้ไขข้อมูลนี้">
-                                <i class="fas fa-edit"></i> แก้ไข
-                            </a>
-                            <a href="{{ route('admin.placement-records.index') }}" class="btn btn-sm btn-default"
-                                title="กลับไปหน้ารายการ">
-                                <i class="fas fa-arrow-left"></i> กลับ
-                            </a>
+                            <a href="{{ route('admin.placement-records.edit', $placementRecord->id) }}" class="btn btn-sm btn-warning" title="แก้ไขข้อมูลนี้"><i class="fas fa-edit"></i> แก้ไข</a>
+                            <a href="{{ route('admin.placement-records.index') }}" class="btn btn-sm btn-default" title="กลับไปหน้ารายการ"><i class="fas fa-arrow-left"></i> กลับ</a>
                         </div>
                     </div>
-                    <!-- /.card-header -->
                     <div class="card-body">
                         {{-- Section 1: General Information --}}
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <dl class="row">
-                                    <dt class="col-sm-5">ปีการบรรจุ (พ.ศ.):</dt>
-                                    <dd class="col-sm-7">{{ $placementRecord->academic_year }}</dd>
-
-                                    <dt class="col-sm-5">วันที่ประกาศ:</dt>
-                                    <dd class="col-sm-7">
-                                        {{ $placementRecord->announcement_date ? $placementRecord->announcement_date->format('j F Y') : '-' }}
-                                    </dd>
-
-                                    <dt class="col-sm-5">รอบการเรียกบรรจุ:</dt>
-                                    <dd class="col-sm-7">{{ $placementRecord->round_number }}</dd>
+                                    {{-- ... (ปี, วันที่ประกาศ, รอบที่ - เหมือนเดิม) ... --}}
+                                    <dt class="col-sm-5">ปีการบรรจุ (พ.ศ.):</dt><dd class="col-sm-7">{{ $placementRecord->academic_year }}</dd>
+                                    <dt class="col-sm-5">วันที่ประกาศ:</dt><dd class="col-sm-7">{{ $placementRecord->announcement_date ? $placementRecord->announcement_date->locale('th')->format('j F Y') : '-' }}</dd>
+                                    <dt class="col-sm-5">รอบการเรียกบรรจุ:</dt><dd class="col-sm-7">{{ $placementRecord->round_number }}</dd>
                                 </dl>
                             </div>
                             <div class="col-md-6">
                                 <dl class="row">
-                                    <dt class="col-sm-5">เขตพื้นที่การศึกษา:</dt>
-                                    <dd class="col-sm-7">{{ $placementRecord->educationalArea->name ?? 'N/A' }}</dd>
-
-                                    <dt class="col-sm-5">ผู้บันทึกข้อมูล:</dt>
-                                    <dd class="col-sm-7">{{ $placementRecord->user->name ?? 'N/A' }}</dd>
-
-                                    <dt class="col-sm-5">บันทึกล่าสุด:</dt>
-                                    <dd class="col-sm-7">{{ $placementRecord->updated_at->format('j F Y H:i') }}
-                                        ({{ $placementRecord->updated_at->diffForHumans() }})</dd>
+                                    <dt class="col-sm-5">เขตพื้นที่การศึกษา:</dt><dd class="col-sm-7">{{ $placementRecord->educationalArea->name ?? 'N/A' }}</dd>
+                                    {{-- <<<< เพิ่มแสดงประเภทการบรรจุ >>>> --}}
+                                    <dt class="col-sm-5">ประเภทการบรรจุ:</dt>
+                                    <dd class="col-sm-7">{{ $placementRecord->placementType->name ?? <span class="text-muted"><em>ไม่ได้ระบุ</em></span> }}</dd>
+                                    <dt class="col-sm-5">สถานะ:</dt>
+                                    <dd class="col-sm-7">
+                                        @if ($placementRecord->status == \App\Models\PlacementRecord::STATUS_APPROVED) <span class="badge badge-success">อนุมัติแล้ว</span>
+                                        @elseif ($placementRecord->status == \App\Models\PlacementRecord::STATUS_REJECTED) <span class="badge badge-danger">ถูกปฏิเสธ</span>
+                                        @elseif ($placementRecord->status == \App\Models\PlacementRecord::STATUS_PENDING) <span class="badge badge-warning">รออนุมัติ</span>
+                                        @else <span class="badge badge-secondary">{{ ucfirst($placementRecord->status) }}</span> @endif
+                                    </dd>
                                 </dl>
                             </div>
                         </div>
+                        {{-- แสดงเหตุผลการปฏิเสธ ถ้ามี --}}
+                        @if($placementRecord->status == \App\Models\PlacementRecord::STATUS_REJECTED && $placementRecord->rejection_reason)
+                        <div class="alert alert-danger">
+                            <strong>เหตุผลในการปฏิเสธ:</strong> {{ $placementRecord->rejection_reason }}
+                        </div>
+                        @endif
 
-                        {{-- Section 2: Subject Groups --}}
+
+                        {{-- Section 2: Subject Groups (เหมือนเดิม) --}}
                         <div class="mb-3">
                             <h5><i class="fas fa-book-open mr-2 text-primary"></i>กลุ่มวิชาเอกที่ประกาศ:</h5>
-                            @if ($placementRecord->subjectGroups->isNotEmpty())
-                                <div class="mt-2">
-                                    @foreach ($placementRecord->subjectGroups as $subject)
-                                        <span class="badge badge-primary mr-1 mb-1"
-                                            style="font-size: 0.9rem; padding: 0.4em 0.7em;">{{ $subject->name }}</span>
-                                    @endforeach
-                                </div>
+                            {{-- ... โค้ดแสดงกลุ่มวิชาเอก ... --}}
+                            @if ($placementRecord->subjectGroups->isNotEmpty()) <div class="mt-2"> @foreach ($placementRecord->subjectGroups as $subject) <span class="badge badge-primary mr-1 mb-1" style="font-size: 0.9rem; padding: 0.4em 0.7em;">{{ $subject->name }}</span> @endforeach </div> @else <p class="text-muted"><em>ไม่ได้ระบุกลุ่มวิชาเอก</em></p> @endif
+                        </div>
+                        <hr>
+
+                        {{-- Section 3: Notes --}}
+                        {{-- <<<< เพิ่มแสดงหมายเหตุ >>>> --}}
+                        <div class="mb-3">
+                            <h5><i class="fas fa-sticky-note mr-2 text-purple"></i>หมายเหตุ:</h5>
+                            @if ($placementRecord->notes)
+                                <p style="white-space: pre-wrap;">{{ $placementRecord->notes }}</p> {{-- white-space: pre-wrap เพื่อให้แสดงการขึ้นบรรทัดใหม่ --}}
                             @else
-                                <p class="text-muted"><em>ไม่ได้ระบุกลุ่มวิชาเอก</em></p>
+                                <p class="text-muted"><em>ไม่มีหมายเหตุ</em></p>
                             @endif
                         </div>
                         <hr>
 
-                        {{-- Section 3: Source Link --}}
+                        {{-- Section 4: Source Link (เหมือนเดิม) --}}
                         <div class="mb-3">
                             <h5><i class="fas fa-link mr-2 text-info"></i>Link ที่มาของข้อมูล:</h5>
-                            @if ($placementRecord->source_link)
-                                <p><a href="{{ $placementRecord->source_link }}" target="_blank"
-                                        rel="noopener noreferrer">{{ $placementRecord->source_link }}</a></p>
-                            @else
-                                <p class="text-muted"><em>ไม่ได้ระบุ Link ที่มา</em></p>
-                            @endif
+                            {{-- ... โค้ดแสดง Link ที่มา ... --}}
+                             @if ($placementRecord->source_link) <p><a href="{{ $placementRecord->source_link }}" target="_blank" rel="noopener noreferrer">{{ $placementRecord->source_link }}</a></p> @else <p class="text-muted"><em>ไม่ได้ระบุ Link ที่มา</em></p> @endif
                         </div>
                         <hr>
 
-                        {{-- Section 4: Attachments --}}
+                        {{-- Section 5: Attachments (เหมือนเดิม) --}}
                         <div class="mb-3">
-                            <h5><i class="fas fa-paperclip mr-2 text-success"></i>ไฟล์แนบ
-                                ({{ $placementRecord->attachments->count() }} ไฟล์):</h5>
-                            @if ($placementRecord->attachments->isNotEmpty())
-                                <ul class="list-unstyled mt-2">
-                                    @foreach ($placementRecord->attachments as $attachment)
-                                        <li class="mb-2 p-2 border rounded bg-light">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    @if ($attachment->type === 'image')
-                                                        <i class="fas fa-image text-purple mr-2"></i>
-                                                    @elseif(Str::contains($attachment->mime_type, 'pdf'))
-                                                        <i class="fas fa-file-pdf text-danger mr-2"></i>
-                                                    @elseif(Str::contains($attachment->mime_type, ['word', 'document']))
-                                                        <i class="fas fa-file-word text-primary mr-2"></i>
-                                                    @elseif(Str::contains($attachment->mime_type, ['excel', 'spreadsheet']))
-                                                        <i class="fas fa-file-excel text-success mr-2"></i>
-                                                    @else
-                                                        <i class="fas fa-file-alt text-secondary mr-2"></i>
-                                                    @endif
-                                                    <span>{{ $attachment->original_filename }}</span>
-                                                    <small
-                                                        class="text-muted ml-2">({{ Str::upper(pathinfo($attachment->original_filename, PATHINFO_EXTENSION)) }})</small>
-                                                </div>
-                                                <a href="{{ route('attachments.view', $attachment->id) }}" target="_blank"
-                                                    class="btn btn-sm btn-outline-info">
-                                                    <i class="fas fa-download mr-1"></i> ดู/ดาวน์โหลด
-                                                </a>
-                                            </div>
-                                            {{-- Optional: Image Preview for image types --}}
-                                            @if ($attachment->type === 'image')
-                                                <div class="mt-2 text-center" style="max-height: 200px; overflow: hidden;">
-                                                    <a href="{{ route('attachments.view', $attachment->id) }}"
-                                                        target="_blank">
-                                                        <img src="{{ route('attachments.view', ['attachment' => $attachment->id, 'preview' => 'true']) }}"
-                                                            alt="{{ $attachment->original_filename }}"
-                                                            class="img-thumbnail"
-                                                            style="max-height: 180px; max-width: 100%; object-fit: contain;">
-                                                    </a>
-                                                </div>
-                                            @endif
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <p class="text-muted"><em>ไม่มีไฟล์แนบ</em></p>
-                            @endif
+                            <h5><i class="fas fa-paperclip mr-2 text-success"></i>ไฟล์แนบ ({{ $placementRecord->attachments->count() }} ไฟล์):</h5>
+                            {{-- ... โค้ดแสดงไฟล์แนบ ... --}}
+                            @if ($placementRecord->attachments->isNotEmpty()) <ul class="list-unstyled mt-2"> @foreach ($placementRecord->attachments as $attachment) <li class="mb-2 p-2 border rounded bg-light"> ... </li> @endforeach </ul> @else <p class="text-muted"><em>ไม่มีไฟล์แนบ</em></p> @endif
+                        </div>
+
+                        {{-- ข้อมูลเพิ่มเติมเกี่ยวกับผู้สร้างและผู้ดำเนินการ (ถ้ามี) --}}
+                        <hr class="my-4">
+                        <div class="row text-sm text-muted">
+                            <div class="col-md-6">
+                                @if($placementRecord->user)
+                                    ผู้สร้าง/ผู้ส่งข้อมูล: {{ $placementRecord->user->name }} ({{ $placementRecord->user->email }})<br>
+                                @endif
+                                สร้างเมื่อ: {{ $placementRecord->created_at->locale('th')->format('j F Y H:i') }}
+                            </div>
+                            <div class="col-md-6 text-md-right">
+                                @if($placementRecord->processor)
+                                    ดำเนินการโดย: {{ $placementRecord->processor->name }} ({{ $placementRecord->processor->email }})<br>
+                                @endif
+                                @if($placementRecord->processed_at)
+                                    ดำเนินการเมื่อ: {{ $placementRecord->processed_at->locale('th')->format('j F Y H:i') }}
+                                @endif
+                            </div>
                         </div>
 
                     </div>
-                    <!-- /.card-body -->
                     <div class="card-footer text-right">
-                        <a href="{{ route('admin.placement-records.index') }}" class="btn btn-default">
-                            <i class="fas fa-arrow-left mr-1"></i>
-                            กลับไปหน้ารายการ
-                        </a>
+                        <a href="{{ route('admin.placement-records.index') }}" class="btn btn-default"><i class="fas fa-arrow-left mr-1"></i> กลับ</a>
                     </div>
                 </div>
-                <!-- /.card -->
             </div>
         </div>
     </div>

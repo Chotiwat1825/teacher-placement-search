@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\PasswordController as AdminPasswordController;
 
 use App\Http\Controllers\Admin\UserController as AdminUserController; // สำหรับจัดการ User ของ Admin
 use App\Http\Controllers\Admin\PlacementTypeController as AdminPlacementTypeController; // สำหรับจัดการประเภทการบรรจุ
+use App\Http\Controllers\UserPlacementSubmissionController; // << เพิ่ม Controller ใหม่
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +52,28 @@ Route::get('/dashboard', function () {
 // =====================================================================
 
 require __DIR__ . '/auth.php';
+// =========================================================================
+// User Specific Routes (สำหรับผู้ใช้ที่ Login แล้ว และไม่ใช่ Admin)
+// =========================================================================
+Route::middleware(['auth', 'verified'])->group(function () {
+    // 'verified' ถ้าใช้ email verification
+
+    // หน้า Dashboard/รายการที่ User ส่ง (จะทำในขั้นตอนถัดไป)
+    Route::get('/my-submissions', [UserPlacementSubmissionController::class, 'index'])->name('user.submissions.index');
+
+    // หน้าฟอร์มสำหรับ User ส่งข้อมูลการบรรจุ
+    Route::get('/submit-placement', [UserPlacementSubmissionController::class, 'create'])->name('user.placements.create');
+
+    // Route สำหรับรับข้อมูลที่ User ส่งมา
+    Route::post('/submit-placement', [UserPlacementSubmissionController::class, 'store'])->name('user.placements.store');
+
+    // (Optional) หน้าสำหรับ User แก้ไขข้อมูลที่ยัง pending
+    // Route::get('/my-submissions/{placementRecord}/edit', [UserPlacementSubmissionController::class, 'edit'])->name('user.submissions.edit');
+    // Route::put('/my-submissions/{placementRecord}', [UserPlacementSubmissionController::class, 'update'])->name('user.submissions.update');
+
+    // (Optional) Route สำหรับ User ลบข้อมูลที่ยัง pending
+    // Route::delete('/my-submissions/{placementRecord}', [UserPlacementSubmissionController::class, 'destroy'])->name('user.submissions.destroy');
+});
 
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')

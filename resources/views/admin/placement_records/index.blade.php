@@ -32,9 +32,10 @@
                         {{-- Search and Filter Form --}}
                         <form method="GET" action="{{ route('admin.placement-records.index') }}" class="mb-0">
                             <div class="row">
-                                <div class="col-md-4 mb-2">
+                                <div class="col-md-3 mb-2"> {{-- ปรับขนาด col --}}
                                     <input type="text" name="search_term" class="form-control form-control-sm"
-                                        placeholder="ค้นหา ปี, รอบ, เขต, วิชาเอก..." value="{{ request('search_term') }}">
+                                        placeholder="ค้นหา ปี, รอบ, เขต, วิชาเอก, ประเภท, หมายเหตุ..."
+                                        value="{{ request('search_term') }}">
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <select name="filter_educational_area_id" class="form-control form-control-sm">
@@ -42,7 +43,7 @@
                                         @foreach ($educationalAreas as $area)
                                             <option value="{{ $area->id }}"
                                                 {{ request('filter_educational_area_id') == $area->id ? 'selected' : '' }}>
-                                                {{ $area->name }}</option>
+                                                {{ Str::limit($area->name, 25) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -52,13 +53,13 @@
                                         @foreach ($subjectGroups as $group)
                                             <option value="{{ $group->id }}"
                                                 {{ request('filter_subject_group_id') == $group->id ? 'selected' : '' }}>
-                                                {{ $group->name }}</option>
+                                                {{ Str::limit($group->name, 25) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <select name="filter_academic_year" class="form-control form-control-sm">
-                                        <option value="">-- ทุกปีการศึกษา --</option>
+                                        <option value="">-- ทุกปี พ.ศ. --</option>
                                         @foreach ($academicYears as $year)
                                             <option value="{{ $year }}"
                                                 {{ request('filter_academic_year') == $year ? 'selected' : '' }}>
@@ -66,16 +67,46 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-2 mb-2">
-                                    <button type="submit" class="btn btn-default btn-sm btn-block">
-                                        <i class="fas fa-filter mr-1"></i> กรอง/ค้นหา
-                                    </button>
-                                    @if (request()->hasAny(['search_term', 'filter_educational_area_id', 'filter_subject_group_id', 'filter_academic_year']))
-                                        <a href="{{ route('admin.placement-records.index') }}"
-                                            class="btn btn-outline-secondary btn-sm btn-block mt-1">
-                                            <i class="fas fa-times mr-1"></i> ล้างค่า
-                                        </a>
-                                    @endif
+                                <div class="col-md-3 mb-2"> {{-- แยกปุ่มออกมา --}}
+                                    <div class="btn-group btn-block">
+                                        <button type="submit" class="btn btn-default btn-sm"><i
+                                                class="fas fa-filter mr-1"></i> กรอง</button>
+                                        @if (request()->hasAny([
+                                                'search_term',
+                                                'filter_educational_area_id',
+                                                'filter_subject_group_id',
+                                                'filter_academic_year',
+                                                'filter_placement_type_id',
+                                                'filter_status',
+                                            ]))
+                                            <a href="{{ route('admin.placement-records.index') }}"
+                                                class="btn btn-outline-secondary btn-sm"><i class="fas fa-times mr-1"></i>
+                                                ล้าง</a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            {{-- เพิ่มแถวสำหรับ filter ประเภท และ สถานะ --}}
+                            <div class="row mt-2">
+                                <div class="col-md-3 mb-2">
+                                    <select name="filter_placement_type_id" class="form-control form-control-sm">
+                                        <option value="">-- ทุกประเภทการบรรจุ --</option>
+                                        @foreach ($placementTypes as $type)
+                                            <option value="{{ $type->id }}"
+                                                {{ request('filter_placement_type_id') == $type->id ? 'selected' : '' }}>
+                                                {{ $type->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <select name="filter_status" class="form-control form-control-sm">
+                                        <option value="">-- ทุกสถานะ --</option>
+                                        @foreach ($statuses as $statusKey => $statusValue)
+                                            <option value="{{ $statusKey }}"
+                                                {{ request('filter_status') == $statusKey ? 'selected' : '' }}>
+                                                {{ $statusValue }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
                         </form>
@@ -91,59 +122,65 @@
                                             <th>ปี พ.ศ.</th>
                                             <th>เขตพื้นที่ฯ</th>
                                             <th>กลุ่มวิชาเอก</th>
+                                            <th>ประเภทการบรรจุ</th> {{-- << เพิ่มคอลัมน์ --}}
                                             <th class="text-center">รอบที่</th>
-                                            <th>วันที่ประกาศ</th> {{-- หัวข้อตาราง --}}
-                                            <th>ผู้บันทึก</th>
+                                            <th>วันที่ประกาศ</th>
+                                            <th>สถานะ</th> {{-- << เพิ่มคอลัมน์ (ถ้ามีระบบอนุมัติ) --}}
+                                            {{-- <th>ผู้บันทึก</th> --}}
                                             <th class="text-center" style="width: 150px">การดำเนินการ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($placementRecords as $index => $record)
-                                            <tr>
+                                            <tr
+                                                class_="{{ $record->status == \App\Models\PlacementRecord::STATUS_PENDING ? 'table-warning' : ($record->status == \App\Models\PlacementRecord::STATUS_REJECTED ? 'table-danger' : '') }}">
                                                 <td>{{ $placementRecords->firstItem() + $index }}</td>
                                                 <td>{{ $record->academic_year }}</td>
                                                 <td>{{ $record->educationalArea->name ?? 'N/A' }}</td>
                                                 <td>
                                                     @if ($record->subjectGroups->isNotEmpty())
-                                                        {{ Str::limit($record->subjectGroups->pluck('name')->implode(', '), 50) }}
-                                                        {{-- จำกัดความยาวถ้าชื่อยาวมาก --}}
+                                                        {{ Str::limit($record->subjectGroups->pluck('name')->implode(', '), 30) }}
                                                     @else
                                                         <span class="text-muted">N/A</span>
                                                     @endif
                                                 </td>
+                                                <td>{{ $record->placementType->name ?? '-' }}</td> {{-- << แสดงชื่อประเภท --}}
                                                 <td class="text-center">{{ $record->round_number }}</td>
                                                 <td>
-                                                    {{-- เปลี่ยนการแสดงผลวันที่ --}}
                                                     @if ($record->announcement_date)
-                                                        {{ $record->announcement_date->format('j F Y') }}
+                                                        {{ $record->announcement_date->locale('th')->format('j M Y') }}
+                                                        {{-- ใช้ M สำหรับเดือนย่อ --}}
                                                     @else
                                                         -
                                                     @endif
                                                 </td>
-                                                <td>{{ $record->user->name ?? 'N/A' }}</td>
+                                                <td>
+                                                    @if ($record->status == \App\Models\PlacementRecord::STATUS_APPROVED)
+                                                        <span class="badge badge-success">อนุมัติแล้ว</span>
+                                                    @elseif ($record->status == \App\Models\PlacementRecord::STATUS_REJECTED)
+                                                        <span class="badge badge-danger">ถูกปฏิเสธ</span>
+                                                    @elseif ($record->status == \App\Models\PlacementRecord::STATUS_PENDING)
+                                                        <span class="badge badge-warning">รออนุมัติ</span>
+                                                    @else
+                                                        <span
+                                                            class="badge badge-secondary">{{ ucfirst($record->status) }}</span>
+                                                    @endif
+                                                </td>
+                                                {{-- <td>{{ $record->user->name ?? 'N/A' }}</td> --}}
                                                 <td class="text-center">
-                                                    {{-- ปุ่มต่างๆ ใช้ btn-group เพื่อจัดกลุ่มปุ่ม --}}
-                                                    <div class="btn-group btn-group-xs" role="group" aria-label="Actions">
-                                                        <a href="{{ route('admin.placement-records.show', $record->id) }}"
-                                                            class="btn btn-info btn-group-xs" title="ดูรายละเอียด">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                        <a href="{{ route('admin.placement-records.edit', $record->id) }}"
-                                                            class="btn btn-warning btn-group-xs" title="แก้ไข">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <button class="btn btn-danger btn-group-xs delete-button"
-                                                            data-id="{{ $record->id }}"
-                                                            data-info="ปี {{ $record->academic_year }} - {{ $record->educationalArea->name ?? '' }} (รอบ {{ $record->round_number }})"
-                                                            title="ลบ">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    </div>
+                                                    <a href="{{ route('admin.placement-records.show', $record->id) }}"
+                                                        class="btn btn-info btn-xs" title="ดูรายละเอียด"><i
+                                                            class="fas fa-eye"></i></a>
+                                                    <a href="{{ route('admin.placement-records.edit', $record->id) }}"
+                                                        class="btn btn-warning btn-xs" title="แก้ไข"><i
+                                                            class="fas fa-edit"></i></a>
+                                                    <button class="btn btn-danger btn-xs delete-button"
+                                                        data-id="{{ $record->id }}"
+                                                        data-info="ปี {{ $record->academic_year }} - {{ $record->educationalArea->name ?? '' }} (รอบ {{ $record->round_number }})"
+                                                        title="ลบ"><i class="fas fa-trash-alt"></i></button>
                                                     <form id="delete-form-{{ $record->id }}"
                                                         action="{{ route('admin.placement-records.destroy', $record->id) }}"
-                                                        method="POST" style="display: none;">
-                                                        @csrf
-                                                        @method('DELETE')
+                                                        method="POST" style="display: none;"> @csrf @method('DELETE')
                                                     </form>
                                                 </td>
                                             </tr>
@@ -152,30 +189,21 @@
                                 </table>
                             </div>
                         @else
-                            <div class="alert alert-warning text-center m-3">
-                                <i class="fas fa-exclamation-triangle mr-2"></i> ไม่พบข้อมูลการบรรจุครู
-                                @if (request()->hasAny(['search_term', 'filter_educational_area_id', 'filter_subject_group_id', 'filter_academic_year']))
-                                    ตามเงื่อนไขการค้นหา/กรองข้อมูล
-                                @endif
-                            </div>
+                            {{-- ... (ส่วนไม่พบข้อมูล) ... --}}
                         @endif
                     </div>
-                    <!-- /.card-body -->
                     @if ($placementRecords->hasPages())
                         <div class="card-footer clearfix">
-                            <div class="float-left">
-                                <small>แสดง {{ $placementRecords->firstItem() }} ถึง {{ $placementRecords->lastItem() }}
-                                    จากทั้งหมด {{ $placementRecords->total() }} รายการ</small>
-                            </div>
+                            {{-- ... (pagination links) ... --}}
+                            <div class="float-left"><small>แสดง {{ $placementRecords->firstItem() }} ถึง
+                                    {{ $placementRecords->lastItem() }} จากทั้งหมด {{ $placementRecords->total() }}
+                                    รายการ</small></div>
                             <div class="float-right">
-                                {{-- ใช้ pagination view ของ Bootstrap 4 (ถ้า AdminLTE ไม่ได้ override) --}}
-                                {{-- หรือถ้าคุณได้ publish pagination view ของ AdminLTE แล้วและมันชื่ออื่น ให้เปลี่ยนตรงนี้ --}}
                                 {{ $placementRecords->appends(request()->query())->links('pagination::bootstrap-4') }}
                             </div>
                         </div>
                     @endif
                 </div>
-                <!-- /.card -->
             </div>
         </div>
     </div>
@@ -205,6 +233,7 @@
 @stop
 
 @section('js')
+    @include('admin.partials.session-messages')
     <script>
         $(document).ready(function() {
             $('.delete-button').on('click', function(e) {
