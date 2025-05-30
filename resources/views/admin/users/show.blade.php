@@ -40,7 +40,7 @@
                         <div class="row">
                             {{-- Profile Image Column --}}
                             <div class="col-md-3 text-center mb-3">
-                                <img src="{{ $user->profile_image ? asset('storage/' . $user->profile_image) : asset('vendor/adminlte/dist/img/avatar5.png') }}"
+                                <img src="{{ $user->profile_image ? asset('storage/' . $user->profile_image) : asset('vendor/adminlte/dist/img/avatar.png') }}"
                                     {{-- ใช้ avatar5 หรือ avatar ที่เหมาะสม --}} alt="User profile picture"
                                     class="img-fluid img-circle elevation-2"
                                     style="width: 180px; height: 180px; object-fit: cover;">
