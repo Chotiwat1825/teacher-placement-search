@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\EducationalArea;
 use App\Models\SubjectGroup;
+use App\Models\PlacementType;
 use App\Models\PlacementRecord;
 use Carbon\Carbon;
+
 
 class PublicSearchController extends Controller
 {
@@ -17,43 +19,61 @@ class PublicSearchController extends Controller
     {
         $educationalAreas = EducationalArea::orderBy('name')->get();
         $subjectGroupsForFilter = SubjectGroup::orderBy('name')->get();
-
-        // Generate academic years (example: 5 years back + current + 2 years forward)
+        $placementTypesForFilter = PlacementType::where('is_active', true)->orderBy('name')->get(); // << เพิ่ม ถ้าจะให้ filter ตามประเภท
         $currentThaiYear = Carbon::now()->year + 543;
         $academicYears = [];
-        for ($i = $currentThaiYear + 2; $i >= $currentThaiYear - 5; $i--) {
+        for ($i = $currentThaiYear + 1; $i >= $currentThaiYear - 5; $i--) {
+            // ปรับช่วงปีตามความเหมาะสม
             $academicYears[] = $i;
         }
 
         // Query placement records
-        $query = PlacementRecord::with(['educationalArea', 'subjectGroups']) // Eager load subjectGroups
-                                ->orderBy('announcement_date', 'desc')
-                                ->orderBy('academic_year', 'desc')
-                                ->orderBy('round_number', 'asc');
+        $query = PlacementRecord::query()
+            ->where('status', PlacementRecord::STATUS_APPROVED) // <<<< เงื่อนไขสำคัญ: แสดงเฉพาะที่อนุมัติแล้ว
+            ->with(['educationalArea', 'subjectGroups', 'placementType']); // Eager load
 
-        // Apply filters
+        // Apply filters from request
         if ($request->filled('educational_area_id')) {
             $query->where('educational_area_id', $request->educational_area_id);
         }
         if ($request->filled('academic_year')) {
             $query->where('academic_year', $request->academic_year);
         }
-        // Filter by subject_group_id (checks if the placement record is associated with this subject group)
         if ($request->filled('subject_group_id')) {
             $query->whereHas('subjectGroups', function ($q) use ($request) {
                 $q->where('subject_groups.id', $request->subject_group_id);
             });
         }
+        if ($request->filled('placement_type_id')) {
+            // << เพิ่ม filter ประเภทการบรรจุ
+            $query->where('placement_type_id', $request->placement_type_id);
+        }
+        // (Optional) Search term
+        if ($request->filled('q')) {
+            // สมมติใช้ q สำหรับ search term
+            $searchTerm = $request->q;
+            $query->where(function ($subQuery) use ($searchTerm) {
+                $subQuery
+                    ->where('notes', 'like', "%{$searchTerm}%") // ค้นหาในหมายเหตุ
+                    ->orWhereHas('educationalArea', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"))
+                    ->orWhereHas('subjectGroups', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"))
+                    ->orWhereHas('placementType', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"));
+            });
+        }
 
-        $placements = $query->paginate(15)->withQueryString(); // Paginate and keep query string
+        $placements = $query->orderBy('announcement_date', 'desc')->orderBy('academic_year', 'desc')->orderBy('round_number', 'asc')->paginate(15)->withQueryString();
 
-        return view('frontend.search', compact(
-            'educationalAreas',
-            'subjectGroupsForFilter',
-            'academicYears',
-            'placements',
-            'request' // Pass request to view for old() and selected values
-        ));
+        return view(
+            'frontend.search',
+            compact(
+                'educationalAreas',
+                'subjectGroupsForFilter',
+                'placementTypesForFilter', // << ส่งไป view
+                'academicYears',
+                'placements',
+                'request',
+            ),
+        );
     }
 
     /**
@@ -62,26 +82,32 @@ class PublicSearchController extends Controller
      */
     public function showDetails(PlacementRecord $placementRecord)
     {
-        // Eager load necessary relationships if not already loaded or to ensure they are fresh
-        $placementRecord->load(['educationalArea', 'subjectGroups', 'attachments']);
+        // Route Model Binding
+        // ตรวจสอบสถานะ ถ้าไม่ approved อาจจะ redirect หรือ abort
+        if ($placementRecord->status !== PlacementRecord::STATUS_APPROVED) {
+            // อาจจะ redirect ไปหน้า search พร้อม message หรือแสดงหน้า 404
+            // return redirect()->route('search.index')->with('warning', 'ไม่พบข้อมูลการบรรจุตามที่ระบุ');
+            abort(404, 'Placement record not found or not approved.');
+        }
 
-        // Query for other related rounds
-        // (same educational area, academic year, and at least one common subject group, but different round)
-        // This can be complex if "same subject groups" means an exact match of all subject groups.
-        // For simplicity, we'll find records with at least one common subject group.
-        // Or, you might decide to only filter by educational_area_id and academic_year for related rounds.
+        $placementRecord->load(['educationalArea', 'subjectGroups', 'attachments', 'placementType', 'creator' /* หรือ user() */]);
 
-        $relatedRoundsQuery = PlacementRecord::where('educational_area_id', $placementRecord->educational_area_id)
-                                        ->where('academic_year', $placementRecord->academic_year)
-                                        ->where('id', '!=', $placementRecord->id); // Exclude current record
+        // Query ข้อมูลรอบอื่นๆ ที่เกี่ยวข้อง (และต้อง approved ด้วย)
+        $relatedRoundsQuery = PlacementRecord::where('status', PlacementRecord::STATUS_APPROVED) // <<<< เพิ่มเงื่อนไข status
+            ->where('educational_area_id', $placementRecord->educational_area_id)
+            ->where('academic_year', $placementRecord->academic_year)
+            ->where('id', '!=', $placementRecord->id);
 
-        // If you want to ensure at least one common subject group:
         if ($placementRecord->subjectGroups->isNotEmpty()) {
             $subjectGroupIds = $placementRecord->subjectGroups->pluck('id')->toArray();
             $relatedRoundsQuery->whereHas('subjectGroups', function ($q) use ($subjectGroupIds) {
                 $q->whereIn('subject_groups.id', $subjectGroupIds);
             });
         }
+        // (Optional) ถ้ามี placement_type_id ก็อาจจะ filter รอบอื่นที่มี type เดียวกัน
+        // if ($placementRecord->placement_type_id) {
+        //     $relatedRoundsQuery->where('placement_type_id', $placementRecord->placement_type_id);
+        // }
 
         $relatedRounds = $relatedRoundsQuery->orderBy('round_number', 'asc')->get();
 

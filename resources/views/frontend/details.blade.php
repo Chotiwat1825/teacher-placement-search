@@ -38,6 +38,13 @@
             <div class="space-y-6 mb-8 pb-8 border-b border-gray-200">
                 <h2 class="text-xl font-semibold text-indigo-700 mb-3">ข้อมูลทั่วไปของการประกาศ</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+
+                    <div> {{-- <<<< แสดงประเภทการบรรจุ >>>> --}}
+    <p class="text-sm font-medium text-gray-500">ประเภทการบรรจุ:</p>
+    <p class="mt-1 text-lg text-gray-900">
+        {{ $placementRecord->placementType->name ?? <span class="italic text-gray-500">ไม่ระบุ</span> }}
+    </p>
+</div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">ปีการบรรจุ (พ.ศ.)</p>
                         <p class="mt-1 text-lg font-semibold text-gray-900">{{ $placementRecord->academic_year }}</p>
@@ -72,6 +79,21 @@
                             <p class="mt-1 text-lg font-semibold text-gray-900 italic">ไม่ระบุ</p>
                         @endif
                     </div>
+                    @if($placementRecord->notes)
+<div class="mb-8 pb-8 border-b border-gray-200">
+    <h2 class="text-xl font-semibold text-indigo-700 mb-3">
+        <i class="fas fa-sticky-note mr-2"></i>หมายเหตุเพิ่มเติม
+    </h2>
+    <div class="prose prose-sm max-w-none text-gray-700 bg-gray-50 p-4 rounded-md">
+        {!! nl2br(e($placementRecord->notes)) !!} {{-- ใช้ e() เพื่อป้องกัน XSS และ nl2br() เพื่อแสดงขึ้นบรรทัดใหม่ --}}
+    </div>
+</div>
+@endif
+@if($placementRecord->creator && !$placementRecord->creator->is_admin && $placementRecord->creator->name)
+    <div class="mt-6 text-sm text-gray-500">
+        <i class="fas fa-user-check mr-1"></i> ข้อมูลนี้ส่งโดย: {{ $placementRecord->creator->name }}
+    </div>
+@endif
                 </div>
             </div>
 

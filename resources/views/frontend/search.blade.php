@@ -14,26 +14,12 @@
         <!-- Search Form Card -->
         <div class="bg-white shadow-xl rounded-lg p-6 md:p-8 mb-10 max-w-4xl mx-auto">
             <form method="GET" action="{{ route('search.index') }}">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 mb-6">
-                    <div>
-                        <label for="educational_area_id"
-                            class="block text-sm font-medium text-gray-700 mb-1">เขตพื้นที่การศึกษา:</label>
-                        <select name="educational_area_id" id="educational_area_id"
-                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors">
-                            <option value="">-- ทั้งหมด --</option>
-                            @foreach ($educationalAreas as $area)
-                                <option value="{{ $area->id }}"
-                                    {{ old('educational_area_id', $request->educational_area_id) == $area->id ? 'selected' : '' }}>
-                                    {{ $area->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6"> {{-- ปรับเป็น 4 คอลัมน์ถ้ามี filter เยอะ --}}
                     <div>
                         <label for="academic_year" class="block text-sm font-medium text-gray-700 mb-1">ปีการศึกษา
                             (พ.ศ.):</label>
                         <select name="academic_year" id="academic_year"
-                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors">
+                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             <option value="">-- ทั้งหมด --</option>
                             @foreach ($academicYears as $year)
                                 <option value="{{ $year }}"
@@ -43,11 +29,40 @@
                             @endforeach
                         </select>
                     </div>
+                    <div> {{-- <<<< เพิ่ม filter ประเภทการบรรจุ >>>> --}}
+                        <label for="placement_type_id"
+                            class="block text-sm font-medium text-gray-700 mb-1">ประเภทการบรรจุ:</label>
+                        <select name="placement_type_id" id="placement_type_id"
+                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">-- ทุกประเภท --</option>
+                            @foreach ($placementTypesForFilter as $type)
+                                <option value="{{ $type->id }}"
+                                    {{ old('placement_type_id', $request->placement_type_id) == $type->id ? 'selected' : '' }}>
+                                    {{ $type->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div>
-                        <label for="subject_group_id" class="block text-sm font-medium text-gray-700 mb-1">กลุ่มวิชาเอก
-                            (ค้นหา):</label>
+                        <label for="educational_area_id"
+                            class="block text-sm font-medium text-gray-700 mb-1">เขตพื้นที่การศึกษา:</label>
+                        <select name="educational_area_id" id="educational_area_id"
+                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">-- ทั้งหมด --</option>
+                            @foreach ($educationalAreas as $area)
+                                <option value="{{ $area->id }}"
+                                    {{ old('educational_area_id', $request->educational_area_id) == $area->id ? 'selected' : '' }}>
+                                    {{ $area->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="subject_group_id"
+                            class="block text-sm font-medium text-gray-700 mb-1">กลุ่มวิชาเอก:</label>
                         <select name="subject_group_id" id="subject_group_id"
-                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors">
+                            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                             <option value="">-- ทั้งหมด --</option>
                             @foreach ($subjectGroupsForFilter as $group)
                                 <option value="{{ $group->id }}"
@@ -56,6 +71,14 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                    {{-- (Optional) Search input --}}
+                    <div class="md:col-span-2 lg:col-span-4 mt-2"> {{-- ทำให้ช่องค้นหากว้าง --}}
+                        <label for="q"
+                            class="block text-sm font-medium text-gray-700 mb-1 sr-only">ค้นหาคำสำคัญ:</label>
+                        <input type="text" name="q" id="q" value="{{ old('q', $request->q) }}"
+                            class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            placeholder="ค้นหาจากหมายเหตุ, ชื่อเขต, วิชาเอก, ประเภท...">
                     </div>
                 </div>
                 <div class="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">

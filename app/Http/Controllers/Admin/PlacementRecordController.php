@@ -27,7 +27,7 @@ class PlacementRecordController extends Controller
     public function index(Request $request)
     {
         $query = PlacementRecord::query()
-            ->with(['educationalArea', 'subjectGroups', 'user', 'placementType', 'processor']) // << เพิ่ม 'processor' ถ้ามี
+            ->with(['educationalArea', 'subjectGroups', 'creator', 'placementType', 'processor']) // << เพิ่ม 'processor' ถ้ามี
             ->orderBy('status', 'asc') // << ให้รายการ pending ขึ้นก่อน (optional)
             ->orderBy('created_at', 'desc'); // หรือ announcement_date
 
@@ -113,11 +113,11 @@ class PlacementRecordController extends Controller
                 'placement_type_id' => $validatedData['placement_type_id'] ?? null, // << เพิ่ม
                 'source_link' => $validatedData['source_link'] ?? null,
                 'notes' => $validatedData['notes'] ?? null, // << เพิ่ม
-                'user_id' => Auth::id(),
+                'creator_id' => Auth::id(),
                 // Admin สร้างข้อมูล, ตั้งสถานะเป็น Approved โดยอัตโนมัติ
-                // ถ้าเป็นระบบ User Submission, status ควรเป็น PENDING
+                // ถ้าเป็นระบบ creator Submission, status ควรเป็น PENDING
                 'status' => PlacementRecord::STATUS_APPROVED,
-                'processed_by_user_id' => Auth::id(), // Admin ที่สร้างก็คือคนที่ process
+                'processed_by_creator_id' => Auth::id(), // Admin ที่สร้างก็คือคนที่ process
                 'processed_at' => now(),
             ];
 
@@ -165,7 +165,7 @@ class PlacementRecordController extends Controller
     public function show(PlacementRecord $placementRecord)
     {
         // Eager load relationships ทั้งหมดที่ต้องการแสดงในหน้ารายละเอียด
-        $placementRecord->load(['educationalArea', 'subjectGroups', 'attachments', 'user', 'placementType']); // << ตรวจสอบ 'placementType'
+        $placementRecord->load(['educationalArea', 'subjectGroups', 'attachments', 'creator', 'placementType']); // << ตรวจสอบ 'placementType'
         return view('admin.placement_records.show', compact('placementRecord'));
     }
 
@@ -216,7 +216,7 @@ class PlacementRecordController extends Controller
                 }
                 // อัปเดตผู้ดำเนินการและเวลา ถ้า status มีการเปลี่ยนแปลงที่มีนัยสำคัญ
                 if ($placementRecord->status !== $validatedData['status'] && in_array($validatedData['status'], [PlacementRecord::STATUS_APPROVED, PlacementRecord::STATUS_REJECTED])) {
-                    $updateData['processed_by_user_id'] = Auth::id();
+                    $updateData['processed_by_creator_id'] = Auth::id();
                     $updateData['processed_at'] = now();
                 }
             }
@@ -321,7 +321,7 @@ class PlacementRecordController extends Controller
         try {
             $updateData = [
                 'status' => $newStatus,
-                'processed_by_user_id' => Auth::id(),
+                'processed_by_creator_id' => Auth::id(),
                 'processed_at' => now(),
                 'rejection_reason' => $newStatus === PlacementRecord::STATUS_REJECTED ? $request->input('rejection_reason') : null,
             ];
@@ -336,10 +336,10 @@ class PlacementRecordController extends Controller
 
             if ($newStatus === PlacementRecord::STATUS_APPROVED) {
                 $message = 'อนุมัติข้อมูลการบรรจุสำเร็จ';
-                // (Optional) Send notification to user
+                // (Optional) Send notification to creator
             } elseif ($newStatus === PlacementRecord::STATUS_REJECTED) {
                 $message = 'ปฏิเสธข้อมูลการบรรจุสำเร็จ';
-                // (Optional) Send notification to user with rejection_reason
+                // (Optional) Send notification to creator with rejection_reason
             }
 
             return redirect()->route('admin.placement-records.index')->with('success', $message);
