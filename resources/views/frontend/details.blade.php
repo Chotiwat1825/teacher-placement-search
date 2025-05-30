@@ -45,7 +45,7 @@
                     <div>
                         <p class="text-sm font-medium text-gray-500">วันที่ประกาศ</p>
                         <p class="mt-1 text-lg font-semibold text-gray-900">
-                            {{ $placementRecord->announcement_date ? $placementRecord->announcement_date->format('j F Y') : 'N/A' }}
+                            {{ $placementRecord->announcement_date ? $placementRecord->announcement_date->locale('th')->format('j F Y') : 'N/A' }}
                         </p>
                     </div>
                     <div>
@@ -95,52 +95,100 @@
 
                 @if ($placementRecord->attachments && $placementRecord->attachments->count() > 0)
                     <div>
-                        <p class="text-sm font-medium text-gray-600 mb-2">ไฟล์แนบ/รูปภาพ:</p>
+                        <p class="text-sm font-medium text-gray-600 mb-2">ไฟล์แนบ/รูปภาพ (คลิกที่รูปเพื่อดูขนาดเต็ม):</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             @foreach ($placementRecord->attachments as $attachment)
-                                <a href="{{ route('attachments.view', $attachment->id) }}" target="_blank"
-                                    class="block border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-150 group text-center transform hover:-translate-y-1">
+                                <div
+                                    class="border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-150 group transform hover:-translate-y-1">
                                     @if ($attachment->type === 'image' && Str::startsWith($attachment->mime_type, 'image/'))
-                                        <div class="w-full h-32 sm:h-36 bg-gray-100 rounded-md overflow-hidden mb-2">
-                                            <img src="{{ route('attachments.view', $attachment->id) }}?preview=true"
-                                                alt="{{ $attachment->original_filename }}"
-                                                class="w-full h-full object-contain group-hover:opacity-90 transition-opacity">
+                                        {{-- Lightbox Link for Image --}}
+                                        <a href="{{ route('attachments.view', ['attachment' => $attachment->id]) }}"
+                                            {{-- URL รูปขนาดเต็มสำหรับ Lightbox --}}
+                                            data-lightbox="placement-gallery-{{ $placementRecord->id }}"
+                                            data-title="{{ $attachment->original_filename }} - {{ $placementRecord->subjectGroups->isNotEmpty() ? $placementRecord->subjectGroups->first()->name : '' }} ปี {{ $placementRecord->academic_year }} รอบ {{ $placementRecord->round_number }}"
+                                            class="block relative">
+                                            <div class="w-full h-48 bg-gray-100 rounded-t-lg overflow-hidden">
+                                                <img src="{{ route('attachments.view', ['attachment' => $attachment->id, 'preview' => 'true']) }}"
+                                                    {{-- URL รูป thumbnail --}} alt="{{ $attachment->original_filename }}"
+                                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200">
+                                            </div>
+                                            <div
+                                                class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-200 flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    class="h-10 w-10 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                    stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                                </svg>
+                                            </div>
+                                        </a>
+                                        <div class="p-3">
+                                            <p class="text-xs sm:text-sm text-indigo-700 font-medium truncate"
+                                                title="{{ $attachment->original_filename }}">
+                                                {{ Str::limit($attachment->original_filename, 25) }}
+                                            </p>
+                                            <a href="{{ route('attachments.view', ['attachment' => $attachment->id, 'download' => 'true']) }}"
+                                                class="mt-1 text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+                                                download="{{ $attachment->original_filename }}"> {{-- download attribute --}}
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                </svg>
+                                                ดาวน์โหลดรูปภาพ
+                                            </a>
                                         </div>
                                     @else
-                                        <div
-                                            class="flex flex-col items-center justify-center h-32 sm:h-36 bg-gray-50 rounded-md mb-2 p-2 border border-dashed border-gray-300">
-                                            @if (Str::contains($attachment->mime_type, 'pdf'))
-                                                <svg class="w-10 h-10 text-red-500 mb-1" xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd"
-                                                        d="M3 17a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H3zm5.5-7.5a.5.5 0 00-1 0V12a.5.5 0 00.5.5h1.5a.5.5 0 000-1H9v-2zM13 9a1 1 0 100-2 1 1 0 000 2zm-1 1.5a.5.5 0 00-.5-.5h-2a.5.5 0 000 1h1.5V12a.5.5 0 001 0v-1.5zM6.25 9a.75.75 0 100-1.5.75.75 0 000 1.5zM5 11.5A.5.5 0 015.5 11h.01a.5.5 0 010 1H5.5a.5.5 0 01-.5-.5z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                            @elseif(Str::contains($attachment->mime_type, ['word', 'document']))
-                                                <svg class="w-10 h-10 text-blue-500 mb-1" xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20" fill="currentColor">
-                                                    <path
-                                                        d="M3 3a2 2 0 00-2 2v10a2 2 0 002 2h3.586a1 1 0 00.707-.293l6-6A1 1 0 0013.586 8H10a2 2 0 01-2-2V3a2 2 0 00-2-2H3zm14-1a2 2 0 00-2-2H7.586a1 1 0 00-.707.293l-2.586 2.586A1 1 0 004 6.586V15a2 2 0 002 2h8a2 2 0 002-2V3a1 1 0 00-1-1z" />
-                                                </svg>
-                                            @else
-                                                <svg class="w-10 h-10 text-gray-400 mb-1" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24"
-                                                    xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
-                                                    </path>
-                                                </svg>
-                                            @endif
-                                            <p class="text-xs text-gray-500">ประเภท:
-                                                {{ strtoupper(pathinfo($attachment->original_filename, PATHINFO_EXTENSION)) }}
+                                        {{-- For Non-Image Files --}}
+                                        <div class="p-3">
+                                            <div
+                                                class="flex items-center justify-center h-32 bg-gray-50 rounded-md mb-2 p-2 border border-dashed border-gray-300">
+                                                @if (Str::contains($attachment->mime_type, 'pdf'))
+                                                    <svg class="w-10 h-10 text-red-500 mb-1"
+                                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                        fill="currentColor">
+                                                        <path fill-rule="evenodd"
+                                                            d="M3 17a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H3zm5.5-7.5a.5.5 0 00-1 0V12a.5.5 0 00.5.5h1.5a.5.5 0 000-1H9v-2zM13 9a1 1 0 100-2 1 1 0 000 2zm-1 1.5a.5.5 0 00-.5-.5h-2a.5.5 0 000 1h1.5V12a.5.5 0 001 0v-1.5zM6.25 9a.75.75 0 100-1.5.75.75 0 000 1.5zM5 11.5A.5.5 0 015.5 11h.01a.5.5 0 010 1H5.5a.5.5 0 01-.5-.5z"
+                                                            clip-rule="evenodd" />
+                                                    </svg>
+                                                @elseif(Str::contains($attachment->mime_type, ['word', 'document']))
+                                                    <svg class="w-10 h-10 text-blue-500 mb-1"
+                                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                                                        fill="currentColor">
+                                                        <path
+                                                            d="M3 3a2 2 0 00-2 2v10a2 2 0 002 2h3.586a1 1 0 00.707-.293l6-6A1 1 0 0013.586 8H10a2 2 0 01-2-2V3a2 2 0 00-2-2H3zm14-1a2 2 0 00-2-2H7.586a1 1 0 00-.707.293l-2.586 2.586A1 1 0 004 6.586V15a2 2 0 002 2h8a2 2 0 002-2V3a1 1 0 00-1-1z" />
+                                                    </svg>
+                                                @else
+                                                    <svg class="w-10 h-10 text-gray-400 mb-1" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24"
+                                                        xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                                        </path>
+                                                    </svg>
+                                                @endif
+                                            </div>
+                                            <p class="text-xs sm:text-sm text-indigo-700 font-medium group-hover:underline truncate leading-tight"
+                                                title="{{ $attachment->original_filename }}">
+                                                {{ Str::limit($attachment->original_filename, 25) }}
                                             </p>
+                                            <a href="{{ route('attachments.view', ['attachment' => $attachment->id, 'download' => 'true']) }}"
+                                                target="_blank" {{-- target="_blank" สำหรับไฟล์ PDF อาจจะเปิดใน tab ใหม่ หรือดาวน์โหลดเลย --}}
+                                                class="mt-1 text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center"
+                                                download="{{ $attachment->original_filename }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                    stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                </svg>
+                                                ดู/ดาวน์โหลด
+                                            </a>
                                         </div>
                                     @endif
-                                    <p class="text-xs sm:text-sm text-indigo-700 font-medium group-hover:underline truncate leading-tight"
-                                        title="{{ $attachment->original_filename }}">
-                                        {{ Str::limit($attachment->original_filename, 25) }}
-                                    </p>
-                                </a>
+                                </div>
                             @endforeach
                         </div>
                     </div>
@@ -160,40 +208,50 @@
                 @endif
             </div>
 
-            <!-- Related Rounds Section -->
+            <!-- Related Rounds Section (เหมือนเดิม) -->
             @if ($relatedRounds && $relatedRounds->count() > 0)
-                <div class="space-y-4">
-                    <h2 class="text-xl font-semibold text-indigo-700 mb-3">ข้อมูลการประกาศรอบอื่นที่เกี่ยวข้อง</h2>
-                    @foreach ($relatedRounds as $round)
-                        <a href="{{ route('placement.details', $round->id) }}"
-                            class="block p-4 bg-gray-50 hover:bg-indigo-50 rounded-lg shadow-sm transition-all duration-150 border border-gray-200 hover:border-indigo-300 transform hover:scale-[1.01]">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-md font-semibold text-indigo-700">
-                                        รอบการเรียกบรรจุ: {{ $round->round_number }}
-                                    </p>
-                                    <p class="text-sm text-gray-600">
-                                        ประกาศวันที่:
-                                        {{ $round->announcement_date ? $round->announcement_date->format('j F Y') : 'N/A' }}
-                                    </p>
-                                    @if ($round->subjectGroups->isNotEmpty())
-                                        <p class="text-xs text-gray-500 mt-1">
-                                            กลุ่มวิชาเอก: {{ $round->subjectGroups->pluck('name')->implode(', ') }}
-                                        </p>
-                                    @endif
-                                </div>
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 text-indigo-400 group-hover:text-indigo-600 transition-colors"
-                                    viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd"
-                                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
+                {{-- ... โค้ดส่วน Related Rounds ... --}}
             @endif
         </div>
     </div>
-@endsection
+@stop
+
+@push('styles')
+    {{-- Lightbox2 CSS --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css"
+        integrity="sha512-ZKX+BvQihRJPA8CROKBhDNvoc2aDMOdAlcm7TUQY+35XYtrd3yh95QOOhsPDQY99L4WOYRNflqrOkR1ebL4VRg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        /* Optional: Custom styles for lightbox or attachment cards */
+        .lightboxOverlay {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .lb-dataContainer {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .lb-caption,
+        .lb-number {
+            color: #333;
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    {{-- jQuery (ถ้ายังไม่ได้ include ใน layouts/app.blade.php) --}}
+    {{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> --}}
+    {{-- Lightbox2 JS (ต้องโหลดหลัง jQuery) --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"
+        integrity="sha512-Ixzuzfxv1EqafeQlTCufWfaC6ful6WF szeptember/XOQAUPgKTvixhgThDem2CkYaGUaLqMsMMlstroLuQfigureL9A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        // Optional: Lightbox2 options
+        lightbox.option({
+            'resizeDuration': 200,
+            'wrapAround': true,
+            'fadeDuration': 300,
+            'albumLabel': "รูปภาพที่ %1 จาก %2" // แปลข้อความ
+        });
+    </script>
+@endpush

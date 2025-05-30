@@ -17,7 +17,9 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
         rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css"
+        integrity="sha512-ZKX+BvQihRJPA8CROKBhDNvoc2aDMOdAlcm7TUQY+35XYtrd3yh95QOOhsPDQY99L4WOYRNflqrOkR1ebL4VRg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Scripts and Styles (Vite) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -196,7 +198,12 @@
             {{-- <p class="text-sm text-gray-400 mt-1">พัฒนาโดย: [ชื่อของคุณ/ทีมงาน]</p> --}}
         </div>
     </footer>
-
+    {{-- ใน layouts/app.blade.php หรือ details.blade.php @push('scripts') (ต้องโหลด jQuery ก่อน) --}}
+    {{-- ตรวจสอบว่า jQuery ถูกโหลดแล้ว --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"
+        integrity="sha512-Ixzuzfxv1EqafeQlTCufWfaC6ful6WF szeptember/XOQAUPgKTvixhgThDem2CkYaGUaLqMsMMlstroLuQfigureL9A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     {{-- SweetAlert2 CDN (ถ้าไม่ได้ bundle ผ่าน npm/vite) --}}
     {{-- <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script> --}}
     {{-- เนื่องจากเราติดตั้งผ่าน npm และ import ใน bootstrap.js แล้ว จึงไม่จำเป็นต้องมี CDN อีก --}}

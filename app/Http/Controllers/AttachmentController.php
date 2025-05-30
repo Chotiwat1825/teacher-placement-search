@@ -19,8 +19,7 @@ class AttachmentController extends Controller
      */
     public function viewOrDownload(PlacementAttachment $attachment, Request $request)
     {
-        // Define the disk where files are stored (e.g., 'private' or 'local' if storage/app)
-        $diskName = config('filesystems.default_private_disk', 'private'); // Use a config value or default to 'private'
+        $diskName = config('filesystems.default_private_disk', 'private');
 
         if (!Storage::disk($diskName)->exists($attachment->file_path)) {
             abort(404, 'File not found.');
@@ -30,12 +29,13 @@ class AttachmentController extends Controller
         $filename = $attachment->original_filename;
         $mimeType = $attachment->mime_type ?: Storage::disk($diskName)->mimeType($attachment->file_path);
 
-        // If 'preview=true' is in query string and it's an image, try to display inline
-        if ($request->query('preview') === 'true' && $attachment->type === 'image' && Str::startsWith($mimeType, 'image/')) {
-            return response()->file($path, ['Content-Type' => $mimeType]);
+        // ถ้ามี parameter 'download=true' หรือไม่ใช่รูปภาพ ให้บังคับดาวน์โหลด
+        if ($request->query('download') === 'true' || !($attachment->type === 'image' && \Str::startsWith($mimeType, 'image/'))) {
+            return Storage::disk($diskName)->download($attachment->file_path, $filename);
         }
 
-        // For other cases or if not a preview, force download
-        return Storage::disk($diskName)->download($attachment->file_path, $filename);
+        // ถ้าเป็นรูปภาพ และไม่มี 'download=true' (สำหรับ Lightbox หรือ preview) ให้แสดง inline
+        // response()->file() จะตั้ง Content-Disposition เป็น 'inline' โดยอัตโนมัติสำหรับ MimeType ที่รู้จัก
+        return response()->file($path, ['Content-Type' => $mimeType]);
     }
 }
