@@ -403,11 +403,7 @@ return [
             'route' => 'admin.password.edit',
             'icon' => 'fas fa-fw fa-lock',
         ],
-                [
-            'text' => 'ออกระบบ',
-            'url' => 'logout',
-            'icon' => 'fas fa-fw fa-sign-out-alt',
-        ],
+
         // [
         //     'text' => 'multilevel',
         //     'icon' => 'fas fa-fw fa-share',
