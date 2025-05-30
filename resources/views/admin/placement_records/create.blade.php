@@ -103,14 +103,45 @@
                                     <div class="form-group">
                                         <label for="round_number">รอบการเรียกบรรจุ <span
                                                 class="text-danger">*</span></label>
-                                        <input type="number" name="round_number" id="round_number"
-                                            class="form-control @error('round_number') is-invalid @enderror"
-                                            value="{{ old('round_number', 1) }}" min="1" placeholder="กรอกตัวเลข">
+                                        <select name="round_number" id="round_number"
+                                            class="form-control @error('round_number') is-invalid @enderror">
+                                            <option value="">-- เลือกรอบ --</option>
+                                            @for ($i = 1; $i <= 15; $i++)
+                                                <option value="{{ $i }}"
+                                                    {{ old('round_number', 1) == $i ? 'selected' : '' }}>
+                                                    {{ $i }}
+                                                </option>
+                                            @endfor
+                                        </select>
+                                        <input type="number" name="round_number" id="round_number_manual"
+                                            class="form-control mt-2 @error('round_number') is-invalid @enderror"
+                                            value="{{ old('round_number') && old('round_number') > 15 ? old('round_number') : '' }}"
+                                            min="1" placeholder="หรือกรอกตัวเลขเอง (ถ้ามากกว่า 15)">
                                         @error('round_number')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
+                                        <small class="form-text text-muted">
+                                            เลือกจากรายการ หรือกรอกตัวเลขเองหากมากกว่า 15
+                                        </small>
                                     </div>
                                 </div>
+                                <script>
+                                    // Sync select and manual input
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const select = document.getElementById('round_number');
+                                        const manual = document.getElementById('round_number_manual');
+                                        select.addEventListener('change', function() {
+                                            if (parseInt(this.value) > 0 && parseInt(this.value) <= 15) {
+                                                manual.value = '';
+                                            }
+                                        });
+                                        manual.addEventListener('input', function() {
+                                            if (parseInt(this.value) > 15) {
+                                                select.value = '';
+                                            }
+                                        });
+                                    });
+                                </script>
                             </div>
 
                             {{-- Row 2: Educational Area --}}
@@ -169,7 +200,8 @@
                                                 <div class="form-check">
                                                     <input
                                                         class="form-check-input @error('subject_groups.' . $group->id) is-invalid @enderror"
-                                                        type="checkbox" name="subject_groups[]" value="{{ $group->id }}"
+                                                        type="checkbox" name="subject_groups[]"
+                                                        value="{{ $group->id }}"
                                                         id="subject_group_{{ $group->id }}"
                                                         {{ is_array(old('subject_groups')) && in_array($group->id, old('subject_groups')) ? 'checked' : '' }}>
                                                     <label class="form-check-label"
