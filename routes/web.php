@@ -89,17 +89,6 @@ Route::middleware(['auth', 'admin'])
         // CRUD สำหรับ กลุ่มวิชาเอก (Subject Groups)
         // =========================================================================
         Route::resource('subject-groups', AdminSubjectGroupController::class);
-        // `Route::resource` จะสร้าง routes ต่อไปนี้โดยอัตโนมัติ:
-        // GET      /admin/subject-groups              -> subject-groups.index   (แสดงรายการ)
-        // GET      /admin/subject-groups/create       -> subject-groups.create  (แสดงฟอร์มสร้าง)
-        // POST     /admin/subject-groups              -> subject-groups.store   (บันทึกข้อมูลใหม่)
-        // GET      /admin/subject-groups/{subject_group} -> subject-groups.show    (แสดงรายละเอียด)
-        // GET      /admin/subject-groups/{subject_group}/edit -> subject-groups.edit  (แสดงฟอร์มแก้ไข)
-        // PUT/PATCH /admin/subject-groups/{subject_group} -> subject-groups.update  (อัปเดตข้อมูล)
-        // DELETE   /admin/subject-groups/{subject_group} -> subject-groups.destroy (ลบข้อมูล)
-        //
-        // โดย {subject_group} คือ ID ของ SubjectGroup (Route Model Binding)
-        // =========================================================================
 
         // =========================================================================
         // CRUD สำหรับ จัดการผู้ใช้ (Users)
