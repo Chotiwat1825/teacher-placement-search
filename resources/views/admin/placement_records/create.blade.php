@@ -176,51 +176,53 @@ $roundNumberManualValue = old('round_number', (isset($placementRecord) ? $placem
                                 @error('subject_groups')
                                     <span class="text-danger text-sm d-block mb-1">{{ $message }}</span>
                                 @enderror
-                                <div class="row pl-2 pr-2 pt-2 pb-2 border rounded bg-light"
-                                    style="max-height: 250px; overflow-y: auto;">
-                                    @php
-                                        $columns = 3; // จำนวนคอลัมน์สำหรับ checkbox
-                                        $itemsPerColumn = ceil(count($subjectGroups) / $columns);
-                                        $currentColumnItems = 0;
-                                        $columnIndex = 0;
-                                    @endphp
+                                <div class="subject-group-checkbox-container pl-2 pr-2 pt-2 pb-2 border rounded bg-light-alpha"
+                                    style="max-height: 280px; overflow-y: auto;">
+                                    <div class="row">
+                                        @php
+                                            $columns = 3; // จำนวนคอลัมน์สำหรับ checkbox
+                                            $itemsPerColumn = ceil(count($subjectGroups) / $columns);
+                                            $currentColumnItems = 0;
+                                            $columnIndex = 0;
+                                        @endphp
 
-                                    @if (count($subjectGroups) > 0)
-                                        @foreach ($subjectGroups as $index => $group)
-                                            @if ($currentColumnItems == 0 && $columnIndex == 0)
-                                                <div class="col-md-{{ 12 / $columns }}">
-                                                    <ul class="list-unstyled mb-0">
-                                                    @elseif ($currentColumnItems >= $itemsPerColumn && $columnIndex < $columns - 1)
+                                        @if (count($subjectGroups) > 0)
+                                            @foreach ($subjectGroups as $index => $group)
+                                                @if ($currentColumnItems == 0 && $columnIndex == 0)
+                                                    <div class="col-md-{{ 12 / $columns }}">
+                                                        <ul class="list-unstyled mb-0">
+                                                        @elseif ($currentColumnItems >= $itemsPerColumn && $columnIndex < $columns - 1)
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-{{ 12 / $columns }}">
+                                                        <ul class="list-unstyled mb-0">
+                                                            @php
+                                                                $currentColumnItems = 0;
+                                                                $columnIndex++;
+                                                            @endphp
+                                                @endif
+
+                                                <li>
+                                                    <div class="form-check">
+                                                        <input
+                                                            class="form-check-input @error('subject_groups.' . $group->id) is-invalid @enderror"
+                                                            type="checkbox" name="subject_groups[]"
+                                                            value="{{ $group->id }}"
+                                                            id="subject_group_{{ $group->id }}"
+                                                            {{ is_array(old('subject_groups')) && in_array($group->id, old('subject_groups')) ? 'checked' : '' }}>
+                                                        <label class="form-check-label"
+                                                            for="subject_group_{{ $group->id }}">
+                                                            {{ $group->name }}
+                                                        </label>
+                                                        {{-- @error('subject_groups.' . $group->id) <span class="invalid-feedback d-block">{{ $message }}</span> @enderror --}}
+                                                    </div>
+                                                </li>
+
+                                                @php $currentColumnItems++; @endphp
+
+                                                @if ($loop->last)
                                                     </ul>
-                                                </div>
-                                                <div class="col-md-{{ 12 / $columns }}">
-                                                    <ul class="list-unstyled mb-0">
-                                                        @php
-                                                            $currentColumnItems = 0;
-                                                            $columnIndex++;
-                                                        @endphp
-                                            @endif
-
-                                            <li>
-                                                <div class="form-check">
-                                                    <input
-                                                        class="form-check-input @error('subject_groups.' . $group->id) is-invalid @enderror"
-                                                        type="checkbox" name="subject_groups[]"
-                                                        value="{{ $group->id }}"
-                                                        id="subject_group_{{ $group->id }}"
-                                                        {{ is_array(old('subject_groups')) && in_array($group->id, old('subject_groups')) ? 'checked' : '' }}>
-                                                    <label class="form-check-label"
-                                                        for="subject_group_{{ $group->id }}">
-                                                        {{ $group->name }}
-                                                    </label>
-                                                    {{-- @error('subject_groups.' . $group->id) <span class="invalid-feedback d-block">{{ $message }}</span> @enderror --}}
-                                                </div>
-                                            </li>
-
-                                            @php $currentColumnItems++; @endphp
-
-                                            @if ($loop->last)
-                                                </ul>
+                                    </div>
                                 </div>
                                 @endif
                                 @endforeach
@@ -322,6 +324,10 @@ $roundNumberManualValue = old('round_number', (isset($placementRecord) ? $placem
     .input-group.flatpickr .input-group-append .btn:focus {
         box-shadow: none;
     }
+
+    .subject-group-checkbox-container {
+        background-color: #f8f9fa;
+    }
 </style>
 @stop
 
@@ -417,7 +423,7 @@ $roundNumberManualValue = old('round_number', (isset($placementRecord) ? $placem
                 if (!$(this).next('.manual-round-error').length) {
                     $(this).after(
                         '<small class="text-danger manual-round-error">กรุณาเลือกจากรายการ (1-10) หรือกรอกค่าที่มากกว่า 10</small>'
-                        );
+                    );
                 }
             } else {
                 $(this).removeClass('is-invalid');
@@ -429,28 +435,28 @@ $roundNumberManualValue = old('round_number', (isset($placementRecord) ? $placem
         // สำหรับการส่งค่า select ไปกับ old() เพื่อให้รู้ว่า 'manual' ถูกเลือกไว้
         // ตอน submit form ให้ copy ค่าของ roundSelect ไปใส่ input ที่ซ่อนอีกตัว
         $('#createPlacementRecordForm, #editPlacementRecordForm').on('submit',
-    function() { // ตรวจสอบ ID ของ form
-            $(this).append('<input type="hidden" name="round_number_select_value" value="' + roundSelect
-                .val() + '" />');
+            function() { // ตรวจสอบ ID ของ form
+                $(this).append('<input type="hidden" name="round_number_select_value" value="' + roundSelect
+                    .val() + '" />');
 
-            // ตรวจสอบครั้งสุดท้ายก่อน submit
-            if (roundSelect.val() === 'manual') {
-                if (parseInt(roundManualInput.val()) > 10 && roundManualInput.val() !== '') {
-                    roundHiddenInput.val(roundManualInput.val());
-                } else {
-                    // ถ้าเลือก manual แต่ manual input ไม่ถูกต้อง, อาจจะ set เป็นค่า default หรือให้ validation จัดการ
-                    // หรือ alert ผู้ใช้
-                    // alert('กรุณากรอกรอบการบรรจุที่ถูกต้องในช่องกรอกตัวเลขเอง (ต้องมากกว่า 10)');
-                    // return false; // Prevent submission if invalid
-                    if (roundManualInput.val() === '') roundHiddenInput.val(
-                    ''); // Clear hidden if manual is empty
+                // ตรวจสอบครั้งสุดท้ายก่อน submit
+                if (roundSelect.val() === 'manual') {
+                    if (parseInt(roundManualInput.val()) > 10 && roundManualInput.val() !== '') {
+                        roundHiddenInput.val(roundManualInput.val());
+                    } else {
+                        // ถ้าเลือก manual แต่ manual input ไม่ถูกต้อง, อาจจะ set เป็นค่า default หรือให้ validation จัดการ
+                        // หรือ alert ผู้ใช้
+                        // alert('กรุณากรอกรอบการบรรจุที่ถูกต้องในช่องกรอกตัวเลขเอง (ต้องมากกว่า 10)');
+                        // return false; // Prevent submission if invalid
+                        if (roundManualInput.val() === '') roundHiddenInput.val(
+                            ''); // Clear hidden if manual is empty
+                    }
+                } else if (roundSelect.val() !== '') {
+                    roundHiddenInput.val(roundSelect.val());
                 }
-            } else if (roundSelect.val() !== '') {
-                roundHiddenInput.val(roundSelect.val());
-            }
-            // ถ้าทั้ง select และ manual input ไม่มีค่า, roundHiddenInput จะมีค่าตาม old() หรือค่าเริ่มต้น
-            // Validation ฝั่ง server ควรจะจัดการกรณีนี้
-        });
+                // ถ้าทั้ง select และ manual input ไม่มีค่า, roundHiddenInput จะมีค่าตาม old() หรือค่าเริ่มต้น
+                // Validation ฝั่ง server ควรจะจัดการกรณีนี้
+            });
         // 1. Initialize Select2 for Educational Area
         $('.select2-ea').select2({
             theme: 'bootstrap4',
