@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\PasswordController as AdminPasswordController;
 
 use App\Http\Controllers\Admin\UserController as AdminUserController; // สำหรับจัดการ User ของ Admin
+use App\Http\Controllers\Admin\PlacementTypeController as AdminPlacementTypeController; // สำหรับจัดการประเภทการบรรจุ
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,11 @@ Route::middleware(['auth', 'admin'])
 
         // CRUD สำหรับ ข้อมูลการบรรจุ
         Route::resource('placement-records', AdminPlacementRecordController::class);
+
+        // =========================================================================
+        // CRUD สำหรับ ประเภทการบรรจุ (Placement Types)
+        // =========================================================================
+        Route::resource('placement-types', AdminPlacementTypeController::class);
 
         // โปรไฟล์ Admin
         Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile.edit');

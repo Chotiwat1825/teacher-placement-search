@@ -370,6 +370,12 @@ return [
             'icon' => 'fas fa-fw fa-book-open',
             // 'can'  => 'manage-subject-groups',
         ],
+        [
+            'text' => 'จัดการประเภทการบรรจุ',
+            'route' => 'admin.placement-types.index',
+            'icon' => 'fas fa-fw fa-tags',
+            // 'can'  => 'manage-subject-groups',
+        ],
         ['header' => 'การจัดการข้อมูลครู'],
         // ==================================================================
         [
