@@ -22,19 +22,31 @@ class UserPlacementSubmissionController extends Controller
     {
         $user = Auth::user();
 
-        $query = PlacementRecord::where('user_id', $user->id) // ดึงเฉพาะข้อมูลของ user ที่ login
-            ->with(['educationalArea', 'subjectGroups', 'placementType']) // Eager load relationships
+        $query = PlacementRecord::where('user_id', $user->id) // <<<< ดึงเฉพาะข้อมูลของ user ที่ login
+            ->with(['educationalArea', 'subjectGroups', 'placementType']) // Eager load
             ->orderBy('created_at', 'desc'); // เรียงตามวันที่สร้างล่าสุด
 
-        // (Optional) Filter by status if needed
-        if ($request->filled('status_filter')) {
+        // (Optional) Filter by status
+        if ($request->filled('status_filter') && in_array($request->status_filter, [PlacementRecord::STATUS_PENDING, PlacementRecord::STATUS_APPROVED, PlacementRecord::STATUS_REJECTED])) {
             $query->where('status', $request->status_filter);
         }
 
-        $submissions = $query->paginate(10)->withQueryString(); // แบ่งหน้า และจำ filter
+        // (Optional) Search term (ถ้า User ต้องการค้นหาข้อมูลของตัวเอง)
+        if ($request->filled('search_term_user')) {
+            $searchTerm = $request->search_term_user;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('academic_year', 'like', "%{$searchTerm}%")
+                    ->orWhere('round_number', 'like', "%{$searchTerm}%")
+                    ->orWhereHas('educationalArea', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"))
+                    ->orWhereHas('subjectGroups', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"))
+                    ->orWhereHas('placementType', fn($sq) => $sq->where('name', 'like', "%{$searchTerm}%"))
+                    ->orWhere('notes', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        $submissions = $query->paginate(10)->withQueryString();
 
         $statusOptions = [
-            // สำหรับ dropdown filter (ถ้ามี)
             PlacementRecord::STATUS_PENDING => 'รอการอนุมัติ',
             PlacementRecord::STATUS_APPROVED => 'อนุมัติแล้ว',
             PlacementRecord::STATUS_REJECTED => 'ถูกปฏิเสธ',

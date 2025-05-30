@@ -112,6 +112,7 @@
                         </form>
                     </div>
                     <!-- /.card-header -->
+                    {{-- ใน resources/views/admin/placement_records/index.blade.php --}}
                     <div class="card-body p-0">
                         @if ($placementRecords->count() > 0)
                             <div class="table-responsive">
@@ -122,34 +123,53 @@
                                             <th>ปี พ.ศ.</th>
                                             <th>เขตพื้นที่ฯ</th>
                                             <th>กลุ่มวิชาเอก</th>
-                                            <th>ประเภทการบรรจุ</th> {{-- << เพิ่มคอลัมน์ --}}
+                                            <th>ประเภทการบรรจุ</th>
                                             <th class="text-center">รอบที่</th>
                                             <th>วันที่ประกาศ</th>
-                                            <th>ผู้ส่งข้อมูล</th>
-                                            <th>สถานะ</th> {{-- << เพิ่มคอลัมน์ (ถ้ามีระบบอนุมัติ) --}}
-                                            {{-- <th>ผู้บันทึก</th> --}}
+                                            <th>ผู้ส่งข้อมูล</th> {{-- คอลัมน์สำหรับผู้ส่ง --}}
+                                            <th>สถานะ</th> {{-- คอลัมน์สำหรับสถานะ --}}
                                             <th class="text-center" style="width: 150px">การดำเนินการ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach ($placementRecords as $index => $record)
                                             <tr
-                                                class_="{{ $record->status == \App\Models\PlacementRecord::STATUS_PENDING ? 'table-warning' : ($record->status == \App\Models\PlacementRecord::STATUS_REJECTED ? 'table-danger' : '') }}">
-                                                {{-- ... (td อื่นๆ) ... --}}
+                                                class="{{ $record->status == \App\Models\PlacementRecord::STATUS_PENDING ? 'table-warning' : ($record->status == \App\Models\PlacementRecord::STATUS_REJECTED ? 'table-danger' : '') }}">
+                                                <td>{{ $placementRecords->firstItem() + $index }}</td>
+                                                <td>{{ $record->academic_year }}</td>
+                                                <td>{{ $record->educationalArea->name ?? 'N/A' }}</td>
+                                                <td>
+                                                    @if ($record->subjectGroups->isNotEmpty())
+                                                        {{ Str::limit($record->subjectGroups->pluck('name')->implode(', '), 30) }}
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ $record->placementType->name ?? '-' }}</td>
+                                                <td class="text-center">{{ $record->round_number }}</td>
+                                                <td>
+                                                    @if ($record->announcement_date)
+                                                        {{ $record->announcement_date->locale('th')->format('j M Y') }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
                                                 <td>{{ $record->creator->name ?? ($record->user->name ?? 'N/A') }}</td>
-                                                {{-- ใช้ creator() หรือ user() relationship --}}
+                                                {{-- ข้อมูลผู้ส่ง --}}
                                                 <td>
                                                     @if ($record->status == \App\Models\PlacementRecord::STATUS_APPROVED)
                                                         <span class="badge badge-success">อนุมัติแล้ว</span>
                                                         @if ($record->processor && $record->processed_at)
-                                                            <br><small class="text-muted">โดย:
-                                                                {{ Str::limit($record->processor->name, 15) }}<br>{{ $record->processed_at->locale('th')->diffForHumans() }}</small>
+                                                            <br><small class="text-muted" style="font-size: 0.75rem;">โดย:
+                                                                {{ Str::limit($record->processor->name, 15) }}
+                                                                <br>{{ $record->processed_at->locale('th')->diffForHumans() }}</small>
                                                         @endif
                                                     @elseif ($record->status == \App\Models\PlacementRecord::STATUS_REJECTED)
                                                         <span class="badge badge-danger">ถูกปฏิเสธ</span>
                                                         @if ($record->processor && $record->processed_at)
-                                                            <br><small class="text-muted">โดย:
-                                                                {{ Str::limit($record->processor->name, 15) }}<br>{{ $record->processed_at->locale('th')->diffForHumans() }}</small>
+                                                            <br><small class="text-muted" style="font-size: 0.75rem;">โดย:
+                                                                {{ Str::limit($record->processor->name, 15) }}
+                                                                <br>{{ $record->processed_at->locale('th')->diffForHumans() }}</small>
                                                         @endif
                                                     @elseif ($record->status == \App\Models\PlacementRecord::STATUS_PENDING)
                                                         <span class="badge badge-warning">รออนุมัติ</span>
@@ -159,11 +179,10 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-center">
-                                                    {{-- เปลี่ยนปุ่ม Edit เป็นปุ่ม Review/Manage สำหรับรายการ Pending --}}
+                                                    {{-- ปุ่มดำเนินการ --}}
                                                     @if ($record->status == \App\Models\PlacementRecord::STATUS_PENDING)
                                                         <a href="{{ route('admin.placement-records.edit', $record->id) }}"
-                                                            {{-- หรือ route('admin.placement-records.review', $record->id) ถ้าสร้างหน้า review แยก --}} class="btn btn-primary btn-xs"
-                                                            title="ตรวจสอบและดำเนินการ">
+                                                            class="btn btn-primary btn-xs" title="ตรวจสอบและดำเนินการ">
                                                             <i class="fas fa-search-plus"></i> ตรวจสอบ
                                                         </a>
                                                     @else
@@ -175,9 +194,17 @@
                                                                 class="fas fa-edit"></i></a>
                                                     @endif
                                                     <button class="btn btn-danger btn-xs delete-button"
-                                                        data-id="{{ $record->id }}" data-info="..." title="ลบ"><i
-                                                            class="fas fa-trash-alt"></i></button>
-                                                    {{-- ... (form ลบ) ... --}}
+                                                        data-id="{{ $record->id }}"
+                                                        data-info="ปี {{ $record->academic_year }} - {{ $record->educationalArea->name ?? '' }} (รอบ {{ $record->round_number }})"
+                                                        title="ลบ">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                    <form id="delete-form-{{ $record->id }}"
+                                                        action="{{ route('admin.placement-records.destroy', $record->id) }}"
+                                                        method="POST" style="display: none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -185,7 +212,19 @@
                                 </table>
                             </div>
                         @else
-                            {{-- ... (ส่วนไม่พบข้อมูล) ... --}}
+                            <div class="alert alert-warning text-center m-3">
+                                <i class="fas fa-exclamation-triangle mr-2"></i> ไม่พบข้อมูลการบรรจุครู
+                                @if (request()->hasAny([
+                                        'search_term',
+                                        'filter_educational_area_id',
+                                        'filter_subject_group_id',
+                                        'filter_academic_year',
+                                        'filter_placement_type_id',
+                                        'filter_status',
+                                    ]))
+                                    ตามเงื่อนไขการค้นหา/กรองข้อมูล
+                                @endif
+                            </div>
                         @endif
                     </div>
                     @if ($placementRecords->hasPages())

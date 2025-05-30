@@ -61,13 +61,11 @@
 <body class="font-sans antialiased bg-gray-100 text-gray-900 flex flex-col min-h-screen">
 
     <!-- Navigation Bar -->
-    <nav class="bg-white shadow-md sticky top-0 z-50">
+    <nav class="bg-white shadow-md sticky top-0 z-50" x-data="{ mobileMenuOpen: false }"> {{-- เพิ่ม x-data สำหรับ Alpine.js --}}
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <div class="flex items-center">
                     <a href="{{ route('search.index') }}" class="flex-shrink-0 flex items-center">
-                        {{-- สามารถใส่ Logo ตรงนี้ได้ --}}
-                        {{-- <img class="h-8 w-auto" src="{{ asset('images/logo.png') }}" alt="Logo"> --}}
                         <span
                             class="ml-2 text-xl font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
                             {{ config('app.name', 'ระบบค้นหาฯ') }}
@@ -75,62 +73,111 @@
                     </a>
                 </div>
 
-                <!-- Navigation Links (ถ้ามี) -->
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4">
+                <!-- Navigation Links -->
+                <div class="hidden md:flex md:items-center md:ml-6">
+                    <div class="flex items-baseline space-x-4">
                         <a href="{{ route('search.index') }}"
-                            class="text-gray-700 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors {{ request()->routeIs('search.index') || request()->routeIs('search.show') ? 'bg-indigo-500 text-white' : '' }}">
+                            class="text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 px-3 py-2 rounded-md text-sm font-medium transition-colors {{ request()->routeIs('search.index') || request()->routeIs('search.show') ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'hover:bg-gray-100' }}">
                             หน้าหลักค้นหา
                         </a>
-                        {{-- เพิ่ม Link อื่นๆ ที่นี่ ถ้าต้องการ --}}
-                        {{-- <a href="#" class="text-gray-700 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">เกี่ยวกับระบบ</a> --}}
 
+                        {{-- ============================================= --}}
+                        {{-- ลิงก์สำหรับ User ที่ Login แล้ว (ไม่ใช่ Admin) --}}
+                        {{-- ============================================= --}}
                         @auth
-                            @if (Auth::user()->is_admin)
-                                <a href="{{ route('admin.dashboard') }}"
-                                    class="text-gray-700 hover:bg-green-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                    ระบบหลังบ้าน
+                            @if (!Auth::user()->is_admin)
+                                <a href="{{ route('user.submissions.index') }}"
+                                    class="text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 px-3 py-2 rounded-md text-sm font-medium transition-colors {{ request()->routeIs('user.submissions.index') ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'hover:bg-gray-100' }}">
+                                    ข้อมูลที่ฉันส่ง
                                 </a>
-                            @else
-                                {{-- <a href="{{ route('dashboard') }}" class="text-gray-700 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">แดชบอร์ดผู้ใช้</a> --}}
-                            @endif
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <a href="{{ route('logout') }}"
-                                    onclick="event.preventDefault(); this.closest('form').submit();"
-                                    class="text-gray-700 hover:bg-red-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                    ออกจากระบบ
-                                </a>
-                            </form>
-                        @else
-                            <a href="{{ route('login') }}"
-                                class="text-gray-700 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                เข้าสู่ระบบ
-                            </a>
-                            @if (Route::has('register'))
-                                <a href="{{ route('register') }}"
-                                    class="text-gray-700 hover:bg-indigo-500 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                                    ลงทะเบียน
+                                <a href="{{ route('user.placements.create') }}"
+                                    class="text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 px-3 py-2 rounded-md text-sm font-medium transition-colors {{ request()->routeIs('user.placements.create') ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'hover:bg-gray-100' }}">
+                                    ส่งข้อมูลการบรรจุใหม่
                                 </a>
                             @endif
                         @endauth
+                        {{-- ============================================= --}}
+
                     </div>
                 </div>
 
-                <!-- Mobile menu button (ถ้าต้องการ) -->
+                <!-- Right Side Of Navbar -->
+                <div class="hidden md:flex items-center ml-auto">
+                    @auth
+                        @if (Auth::user()->is_admin)
+                            <a href="{{ route('admin.dashboard') }}"
+                                class="text-sm text-gray-700 hover:bg-green-100 hover:text-green-700 px-3 py-2 rounded-md font-medium transition-colors">
+                                <i class="fas fa-user-shield mr-1"></i> ระบบหลังบ้าน
+                            </a>
+                        @endif
+                        {{-- User Dropdown (ตัวอย่าง) --}}
+                        <div class="ml-3 relative" x-data="{ open: false }" @click.away="open = false">
+                            <div>
+                                <button @click="open = !open" type="button"
+                                    class="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                    <span class="sr-only">Open user menu</span>
+                                    <img class="h-8 w-8 rounded-full object-cover"
+                                        src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatars/default_user.png') }}"
+                                        alt="{{ Auth::user()->name }}">
+                                    <span
+                                        class="ml-2 hidden sm:inline text-gray-700 text-sm">{{ Auth::user()->name }}</span>
+                                    <svg class="ml-1 h-5 w-5 text-gray-400 hidden sm:inline"
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                                role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1"
+                                style="display: none;">
+                                {{-- Profile Link (ถ้ามีหน้า profile สำหรับ user ทั่วไป) --}}
+                                {{-- <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="user-menu-item-0">โปรไฟล์ของฉัน</a> --}}
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <a href="{{ route('logout') }}"
+                                        onclick="event.preventDefault(); this.closest('form').submit();"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300"
+                                        role="menuitem" tabindex="-1" id="user-menu-item-2">
+                                        ออกจากระบบ
+                                    </a>
+                                </form>
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ route('login') }}"
+                            class="text-sm text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 px-3 py-2 rounded-md font-medium transition-colors">เข้าสู่ระบบ</a>
+                        @if (Route::has('register'))
+                            <a href="{{ route('register') }}"
+                                class="ml-4 text-sm text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 px-3 py-2 rounded-md font-medium transition-colors">ลงทะเบียน</a>
+                        @endif
+                    @endauth
+                </div>
+
+
+                <!-- Mobile menu button -->
                 <div class="-mr-2 flex md:hidden">
-                    <button type="button" @click="mobileMenuOpen = !mobileMenuOpen"
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" type="button"
                         class="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
                         aria-controls="mobile-menu" aria-expanded="false">
                         <span class="sr-only">Open main menu</span>
-                        <svg x-show="!mobileMenuOpen" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <svg :class="{ 'hidden': mobileMenuOpen, 'block': !mobileMenuOpen }" class="h-6 w-6"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
-                        <svg x-show="mobileMenuOpen" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
-                            style="display: none;">
+                        <svg :class="{ 'block': mobileMenuOpen, 'hidden': !mobileMenuOpen }" class="h-6 w-6"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" aria-hidden="true" style="display: none;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -139,34 +186,40 @@
             </div>
         </div>
 
-        <!-- Mobile menu, show/hide based on menu state. (ถ้าต้องการ) -->
+        <!-- Mobile menu, show/hide based on menu state. -->
         <div x-show="mobileMenuOpen" class="md:hidden" id="mobile-menu" style="display: none;"
-            x-transition:enter="transition ease-out duration-100 transform"
-            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-75 transform"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150"
             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 <a href="{{ route('search.index') }}"
-                    class="text-gray-700 hover:bg-indigo-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-colors {{ request()->routeIs('search.index') || request()->routeIs('search.show') ? 'bg-indigo-500 text-white' : '' }}">หน้าหลักค้นหา</a>
-                {{-- เพิ่ม Link อื่นๆ ที่นี่ --}}
+                    class="text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 block px-3 py-2 rounded-md text-base font-medium transition-colors {{ request()->routeIs('search.index') || request()->routeIs('search.show') ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'hover:bg-gray-100' }}">หน้าหลักค้นหา</a>
                 @auth
+                    @if (!Auth::user()->is_admin)
+                        <a href="{{ route('user.submissions.index') }}"
+                            class="text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 block px-3 py-2 rounded-md text-base font-medium transition-colors {{ request()->routeIs('user.submissions.index') ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'hover:bg-gray-100' }}">ข้อมูลที่ฉันส่ง</a>
+                        <a href="{{ route('user.placements.create') }}"
+                            class="text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 block px-3 py-2 rounded-md text-base font-medium transition-colors {{ request()->routeIs('user.placements.create') ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'hover:bg-gray-100' }}">ส่งข้อมูลการบรรจุใหม่</a>
+                    @endif
+                    <hr class="my-2 border-gray-200">
                     @if (Auth::user()->is_admin)
                         <a href="{{ route('admin.dashboard') }}"
-                            class="text-gray-700 hover:bg-green-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-colors">ระบบหลังบ้าน</a>
+                            class="text-gray-700 hover:bg-green-100 hover:text-green-700 block px-3 py-2 rounded-md text-base font-medium transition-colors">ระบบหลังบ้าน</a>
                     @endif
+                    {{-- <a href="#" class="text-gray-700 hover:bg-gray-50 hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium">โปรไฟล์ของฉัน</a> --}}
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();"
-                            class="text-gray-700 hover:bg-red-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-colors">
+                            class="text-gray-700 hover:bg-red-100 hover:text-red-700 block px-3 py-2 rounded-md text-base font-medium transition-colors">
                             ออกจากระบบ
                         </a>
                     </form>
                 @else
                     <a href="{{ route('login') }}"
-                        class="text-gray-700 hover:bg-indigo-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-colors">เข้าสู่ระบบ</a>
+                        class="text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 block px-3 py-2 rounded-md text-base font-medium transition-colors">เข้าสู่ระบบ</a>
                     @if (Route::has('register'))
                         <a href="{{ route('register') }}"
-                            class="text-gray-700 hover:bg-indigo-500 hover:text-white block px-3 py-2 rounded-md text-base font-medium transition-colors">ลงทะเบียน</a>
+                            class="text-gray-700 hover:bg-indigo-100 hover:text-indigo-700 block px-3 py-2 rounded-md text-base font-medium transition-colors">ลงทะเบียน</a>
                     @endif
                 @endauth
             </div>

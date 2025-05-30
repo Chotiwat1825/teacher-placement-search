@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log; // สำหรับ Logging
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Http\Requests\Admin\StorePlacementRecordRequest; // << Import Form Request
+use App\Http\Requests\Admin\UpdatePlacementRecordRequest; // << Import Form Request
 
 // แนะนำให้สร้าง Form Requests:
 // php artisan make:request Admin/StorePlacementRecordRequest
