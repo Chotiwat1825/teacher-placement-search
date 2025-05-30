@@ -1,18 +1,28 @@
-{{-- สมมติว่าใช้ layouts.app หรือ layouts.frontend ที่คุณมีอยู่ --}}
-@extends('layouts.app') {{-- หรือ layouts.user_dashboard ถ้ามี --}}
+@extends('layouts.app') {{-- หรือ layouts.user ถ้าคุณมี layout แยกสำหรับ user ที่ login แล้ว --}}
 
-@section('title', 'ส่งข้อมูลการบรรจุใหม่')
+@section('title', 'ส่งข้อมูลการประกาศบรรจุครู')
 
-{{-- อาจจะต้อง include CSS/JS สำหรับ Select2, Flatpickr ถ้า layout นี้ยังไม่มี --}}
 @push('styles')
-    {{-- AdminLTE จะ @section('plugins.Select2', true) เราอาจจะต้อง include เอง --}}
+    {{-- Select2 CSS (ถ้า layout หลักยังไม่มี) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    {{-- หรือ theme อื่น --}}
+    {{-- Flatpickr CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        /* Custom styles for user form */
+        body {
+            background-color: #f4f6f9;
+            /* สีพื้นหลังอ่อนๆ คล้าย AdminLTE */
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #4f46e5;
+            /* Indigo-600 */
+            box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.25);
+        }
+
         .select2-container--bootstrap-5 .select2-selection--single {
             height: calc(1.5em + .75rem + 2px);
         }
@@ -27,26 +37,83 @@
         }
 
         .subject-group-checkbox-container {
-            background-color: #f8f9fa;
-            max-height: 250px;
+            background-color: #ffffff;
+            max-height: 280px;
+            /* เพิ่มความสูงเล็กน้อย */
             overflow-y: auto;
-            padding: 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: .25rem;
+            padding: 1.25rem;
+            /* เพิ่ม padding */
+            border: 1px solid #ced4da;
+            /* Border ที่ชัดเจนขึ้น */
+            border-radius: 0.375rem;
+            /* Bootstrap 5 rounded */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-check {
+            margin-bottom: 0.6rem;
+        }
+
+        /* เพิ่มระยะห่างระหว่าง checkbox */
+        .form-check-label {
+            cursor: pointer;
+            font-weight: 500;
+            /* ทำให้ label ชัดขึ้น */
+            transition: color 0.15s ease-in-out;
+        }
+
+        .form-check-input:checked+.form-check-label {
+            color: #4f46e5;
+            /* Indigo-600 */
         }
 
         .form-check-input {
-            margin-top: .3rem;
-            margin-left: -1.25rem;
+            margin-top: .25rem;
         }
 
-        /* Adjust for Bootstrap 5 form-check */
-        .form-check-label {
-            margin-bottom: 0;
+        .step-divider {
+            border-top: 1px dashed #adb5bd;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
         }
 
-        .custom-file-label::after {
-            content: "เลือกไฟล์";
+        .form-section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #4f46e5;
+            /* Indigo-600 */
+            padding-bottom: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+
+        .btn-primary:hover {
+            background-color: #4338ca;
+            border-color: #4338ca;
+        }
+
+        .text-indigo-700 {
+            color: #4338ca;
+        }
+
+        .input-group .form-control {
+            border-right: 0;
+            /* Remove right border for input next to button */
+        }
+
+        .input-group .form-control:focus {
+            z-index: auto;
+            /* Prevent focus shadow overlap */
+        }
+
+        .input-group .input-group-text,
+        .input-group .btn {
+            background-color: #fff;
         }
     </style>
 @endpush
@@ -54,40 +121,61 @@
 @section('content')
     <div class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8">
-                <h2 class="mb-4 text-center font-weight-bold text-indigo-700">ส่งข้อมูลการประกาศบรรจุครู</h2>
-                <p class="text-center text-muted mb-4">กรุณากรอกรายละเอียดให้ครบถ้วน
-                    ข้อมูลของท่านจะถูกตรวจสอบโดยผู้ดูแลระบบก่อนเผยแพร่</p>
+            <div class="col-lg-9 col-xl-8"> {{-- ปรับความกว้างให้เหมาะสม --}}
+
+                <div class="text-center mb-5">
+                    <i class="fas fa-bullhorn fa-3x text-indigo-700 mb-3"></i>
+                    <h1 class="h2 font-weight-bold text-gray-800">ส่งข้อมูลการประกาศบรรจุครู</h1>
+                    <p class="text-muted lead">
+                        ร่วมเป็นส่วนหนึ่งในการแบ่งปันข้อมูลที่เป็นประโยชน์แก่เพื่อนครูและผู้สนใจ
+                    </p>
+                </div>
 
                 @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <ul class="mb-0">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <h5 class="alert-heading"><i
+                                class="fas fa-exclamation-triangle mr-2"></i><strong>พบข้อผิดพลาด!</strong></h5>
+                        <p class="mb-2">กรุณาตรวจสอบข้อมูลในฟอร์มและลองใหม่อีกครั้ง:</p>
+                        <ul class="mb-0 pl-4">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
                         </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
                 @if (session('success'))
-                    <div class="alert alert-success"> {{ session('success') }} </div>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 @endif
                 @if (session('error'))
-                    <div class="alert alert-danger"> {{ session('error') }} </div>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-times-circle mr-2"></i> {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 @endif
 
-
-                <div class="card shadow-sm">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-light py-3">
+                        <h5 class="mb-0 font-weight-bold text-indigo-700">
+                            <i class="fas fa-edit mr-2"></i>กรอกรายละเอียดข้อมูล
+                        </h5>
+                    </div>
                     <div class="card-body p-4 p-md-5">
                         <form action="{{ route('user.placements.store') }}" method="POST" enctype="multipart/form-data"
                             id="userSubmitPlacementForm">
                             @csrf
 
-                            {{-- Row 1: Academic Year, Announcement Date, Round Number --}}
-                            <div class="row mb-3">
+                            {{-- Section 1: ข้อมูลทั่วไป --}}
+                            <h3 class="form-section-title">ข้อมูลทั่วไป</h3>
+                            <div class="row mb-3 gx-3"> {{-- gx-3 for gutter --}}
                                 <div class="col-md-4 form-group">
-                                    <label for="academic_year">ปีการบรรจุ (พ.ศ.) <span class="text-danger">*</span></label>
+                                    <label for="academic_year" class="form-label font-weight-semibold">ปีการบรรจุ (พ.ศ.)
+                                        <span class="text-danger">*</span></label>
                                     <select name="academic_year" id="academic_year"
-                                        class="form-control @error('academic_year') is-invalid @enderror" required>
+                                        class="form-select @error('academic_year') is-invalid @enderror" required>
                                         <option value="" disabled
                                             {{ old('academic_year', $LastYear ?? now()->year + 543) ? '' : 'selected' }}>--
                                             เลือกปี --</option>
@@ -103,15 +191,23 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-4 form-group">
-                                    <label for="announcement_date">วันที่ประกาศ <span class="text-danger">*</span></label>
-                                    <div class="input-group user-flatpickr" data-wrap="true" data-click-opens="false">
-                                        <input type="text" name="announcement_date" id="announcement_date_user"
+                                    <label for="announcement_date_user_input"
+                                        class="form-label font-weight-semibold">วันที่ประกาศ <span
+                                            class="text-danger">*</span></label>
+                                    <div class="input-group user-flatpickr" data-wrap="true" data-click-opens="true">
+                                        <span class="input-group-text bg-white"><i
+                                                class="fas fa-calendar-alt text-primary"></i></span>
+                                        <input type="text" name="announcement_date" id="announcement_date_user_input"
                                             class="form-control @error('announcement_date') is-invalid @enderror"
                                             value="{{ old('announcement_date') }}" required data-input
                                             placeholder="เลือกวันที่...">
                                         <button class="btn btn-outline-secondary" type="button" title="เลือกวันที่"
                                             data-toggle>
-                                            <i class="fas fa-calendar-alt"></i>
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                        <button class="btn btn-outline-secondary" type="button" title="ล้างวันที่"
+                                            data-clear>
+                                            <i class="fas fa-times"></i>
                                         </button>
                                     </div>
                                     @error('announcement_date')
@@ -119,12 +215,13 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-4 form-group">
-                                    <label for="round_number_select_user">รอบการเรียกบรรจุ <span
+                                    <label for="round_number_select_user"
+                                        class="form-label font-weight-semibold">รอบการเรียกบรรจุ <span
                                             class="text-danger">*</span></label>
                                     <input type="hidden" name="round_number" id="round_number_hidden_user"
                                         value="{{ old('round_number', 1) }}">
                                     <select id="round_number_select_user"
-                                        class="form-control @error('round_number') is-invalid @enderror">
+                                        class="form-select @error('round_number') is-invalid @enderror">
                                         <option value="">-- เลือกรอบ (1-15) --</option>
                                         @for ($i = 1; $i <= 15; $i++)
                                             <option value="{{ $i }}"
@@ -144,7 +241,7 @@
                                     <input type="number" id="round_number_manual_input_user"
                                         class="form-control mt-2 @error('round_number') is-invalid @enderror"
                                         value="{{ $isManualUser && $roundManualUser > 15 ? $roundManualUser : '' }}"
-                                        min="1" placeholder="กรอกรอบ (ถ้า > 15)"
+                                        min="16" placeholder="กรอกรอบ (ถ้า > 15)"
                                         style="{{ $isManualUser ? '' : 'display: none;' }}">
                                     @error('round_number')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -152,13 +249,17 @@
                                 </div>
                             </div>
 
+                            <div class="step-divider"></div>
+                            <h3 class="form-section-title">รายละเอียดตำแหน่ง</h3>
+
                             {{-- Row 2: Educational Area and Placement Type --}}
-                            <div class="row mb-3">
+                            <div class="row mb-3 gx-3">
                                 <div class="col-md-6 form-group">
-                                    <label for="educational_area_id">เขตพื้นที่การศึกษา <span
+                                    <label for="educational_area_id_user"
+                                        class="form-label font-weight-semibold">เขตพื้นที่การศึกษา <span
                                             class="text-danger">*</span></label>
                                     <select name="educational_area_id" id="educational_area_id_user"
-                                        class="form-control user-select2 @error('educational_area_id') is-invalid @enderror"
+                                        class="form-select user-select2 @error('educational_area_id') is-invalid @enderror"
                                         required data-placeholder="-- คลิกเพื่อเลือกเขตพื้นที่ฯ --">
                                         <option value=""></option>
                                         @foreach ($educationalAreas as $area)
@@ -172,9 +273,10 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6 form-group">
-                                    <label for="placement_type_id">ประเภทการบรรจุ</label>
+                                    <label for="placement_type_id_user"
+                                        class="form-label font-weight-semibold">ประเภทการบรรจุ</label>
                                     <select name="placement_type_id" id="placement_type_id_user"
-                                        class="form-control user-select2 @error('placement_type_id') is-invalid @enderror"
+                                        class="form-select user-select2 @error('placement_type_id') is-invalid @enderror"
                                         data-placeholder="-- เลือกประเภทการบรรจุ (ถ้ามี) --">
                                         <option value=""></option>
                                         @foreach ($placementTypes as $type)
@@ -191,7 +293,8 @@
 
                             {{-- Row 3: Subject Groups (Checkboxes) --}}
                             <div class="form-group mb-3">
-                                <label>กลุ่มวิชาเอก (เลือกได้หลายรายการ) <span class="text-danger">*</span></label>
+                                <label class="form-label font-weight-semibold">กลุ่มวิชาเอก (เลือกได้หลายรายการ) <span
+                                        class="text-danger">*</span></label>
                                 @error('subject_groups')
                                     <small class="text-danger d-block mb-1">{{ $message }}</small>
                                 @enderror
@@ -232,14 +335,21 @@
                                 @enderror
                             </div>
 
+                            <div class="step-divider"></div>
+                            <h3 class="form-section-title">แหล่งข้อมูลและเอกสาร</h3>
+
                             {{-- Row 4: Source Link --}}
                             <div class="form-group mb-3">
-                                <label for="source_link">Link ที่มาของข้อมูล (เช่น URL ประกาศ) <span
-                                        class="text-danger">*</span></label>
-                                <input type="url" name="source_link" id="source_link"
-                                    class="form-control @error('source_link') is-invalid @enderror"
-                                    value="{{ old('source_link') }}" placeholder="https://example.com/ประกาศผล.pdf"
-                                    required>
+                                <label for="source_link" class="form-label font-weight-semibold">Link ที่มาของข้อมูล (เช่น
+                                    URL ประกาศ) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i
+                                            class="fas fa-link text-primary"></i></span>
+                                    <input type="url" name="source_link" id="source_link"
+                                        class="form-control @error('source_link') is-invalid @enderror"
+                                        value="{{ old('source_link') }}" placeholder="https://example.com/ประกาศผล.pdf"
+                                        required>
+                                </div>
                                 @error('source_link')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -247,9 +357,9 @@
 
                             {{-- Row 5: Notes --}}
                             <div class="form-group mb-3">
-                                <label for="notes">หมายเหตุ (ถ้ามี)</label>
-                                <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="3"
-                                    placeholder="ข้อมูลเพิ่มเติม หรือหมายเหตุอื่นๆ">{{ old('notes') }}</textarea>
+                                <label for="notes" class="form-label font-weight-semibold">หมายเหตุ (ถ้ามี)</label>
+                                <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="4"
+                                    placeholder="ข้อมูลเพิ่มเติม หรือหมายเหตุอื่นๆ ที่เป็นประโยชน์">{{ old('notes') }}</textarea>
                                 @error('notes')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -257,7 +367,8 @@
 
                             {{-- Row 6: Attachments --}}
                             <div class="form-group mb-4">
-                                <label for="attachments_user">ไฟล์แนบ (PDF, JPG, PNG ไม่เกิน 5MB ต่อไฟล์)</label>
+                                <label for="attachments_user" class="form-label font-weight-semibold">ไฟล์แนบ (PDF, JPG,
+                                    PNG ไม่เกิน 5MB ต่อไฟล์)</label>
                                 <input type="file" name="attachments[]"
                                     class="form-control @error('attachments.*') is-invalid @enderror"
                                     id="attachments_user" multiple>
@@ -267,12 +378,13 @@
                                 @error('attachments.*')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
-                                <small class="form-text text-muted">กด Ctrl หรือ Shift ค้างไว้เพื่อเลือกหลายไฟล์</small>
-                                <div id="user-attachment-previews" class="mt-2"></div>
+                                <small class="form-text text-muted">สามารถเลือกได้หลายไฟล์ (กด Ctrl หรือ Shift
+                                    ค้างไว้)</small>
+                                <div id="user-attachment-previews" class="mt-3"></div>
                             </div>
 
-                            <div class="form-group text-center">
-                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <div class="form-group text-center pt-4 border-top">
+                                <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
                                     <i class="fas fa-paper-plane mr-2"></i> ส่งข้อมูลเพื่อรอการตรวจสอบ
                                 </button>
                             </div>
@@ -428,7 +540,7 @@
                     if (!$(this).next('.manual-round-error-user').length) {
                         $(this).after(
                             '<small class="text-danger manual-round-error-user d-block">หากน้อยกว่าหรือเท่ากับ 15 กรุณาเลือกจากรายการ</small>'
-                            );
+                        );
                     }
                 } else {
                     $(this).removeClass('is-invalid');
