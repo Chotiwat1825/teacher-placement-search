@@ -36,22 +36,6 @@ Route::get('/', [PublicSearchController::class, 'index'])->name('search.index');
 Route::get('/placement/{placementRecord}', [PublicSearchController::class, 'showDetails'])->name('placement.details');
 Route::get('/attachments/{attachment}/view', [AttachmentController::class, 'viewOrDownload'])->name('attachments.view');
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
-
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })
-//     ->middleware(['auth', 'verified'])
-//     ->name('dashboard');
-
-// Route::middleware('auth')->group(function () {
-//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// });
-
 // Route สำหรับ Dashboard ของผู้ใช้ทั่วไป (ถ้ามี) หรือ redirect
 Route::get('/dashboard', function () {
     if (auth()->check() && auth()->user()->is_admin) {
@@ -64,12 +48,6 @@ Route::get('/dashboard', function () {
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 // =====================================================================
-
-// Route::middleware('auth')->group(function () {
-//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// });
 
 require __DIR__ . '/auth.php';
 
