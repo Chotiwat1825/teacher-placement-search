@@ -98,7 +98,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-3 mb-2">
+                                <div class="col-md-2 mb-2"> {{-- หรือ col-md-3 ถ้าต้องการให้กว้างขึ้น --}}
                                     <select name="filter_status" class="form-control form-control-sm">
                                         <option value="">-- ทุกสถานะ --</option>
                                         @foreach ($statuses as $statusKey => $statusValue)
@@ -125,6 +125,7 @@
                                             <th>ประเภทการบรรจุ</th> {{-- << เพิ่มคอลัมน์ --}}
                                             <th class="text-center">รอบที่</th>
                                             <th>วันที่ประกาศ</th>
+                                            <th>ผู้ส่งข้อมูล</th>
                                             <th>สถานะ</th> {{-- << เพิ่มคอลัมน์ (ถ้ามีระบบอนุมัติ) --}}
                                             {{-- <th>ผู้บันทึก</th> --}}
                                             <th class="text-center" style="width: 150px">การดำเนินการ</th>
@@ -134,31 +135,22 @@
                                         @foreach ($placementRecords as $index => $record)
                                             <tr
                                                 class_="{{ $record->status == \App\Models\PlacementRecord::STATUS_PENDING ? 'table-warning' : ($record->status == \App\Models\PlacementRecord::STATUS_REJECTED ? 'table-danger' : '') }}">
-                                                <td>{{ $placementRecords->firstItem() + $index }}</td>
-                                                <td>{{ $record->academic_year }}</td>
-                                                <td>{{ $record->educationalArea->name ?? 'N/A' }}</td>
-                                                <td>
-                                                    @if ($record->subjectGroups->isNotEmpty())
-                                                        {{ Str::limit($record->subjectGroups->pluck('name')->implode(', '), 30) }}
-                                                    @else
-                                                        <span class="text-muted">N/A</span>
-                                                    @endif
-                                                </td>
-                                                <td>{{ $record->placementType->name ?? '-' }}</td> {{-- << แสดงชื่อประเภท --}}
-                                                <td class="text-center">{{ $record->round_number }}</td>
-                                                <td>
-                                                    @if ($record->announcement_date)
-                                                        {{ $record->announcement_date->locale('th')->format('j M Y') }}
-                                                        {{-- ใช้ M สำหรับเดือนย่อ --}}
-                                                    @else
-                                                        -
-                                                    @endif
-                                                </td>
+                                                {{-- ... (td อื่นๆ) ... --}}
+                                                <td>{{ $record->creator->name ?? ($record->user->name ?? 'N/A') }}</td>
+                                                {{-- ใช้ creator() หรือ user() relationship --}}
                                                 <td>
                                                     @if ($record->status == \App\Models\PlacementRecord::STATUS_APPROVED)
                                                         <span class="badge badge-success">อนุมัติแล้ว</span>
+                                                        @if ($record->processor && $record->processed_at)
+                                                            <br><small class="text-muted">โดย:
+                                                                {{ Str::limit($record->processor->name, 15) }}<br>{{ $record->processed_at->locale('th')->diffForHumans() }}</small>
+                                                        @endif
                                                     @elseif ($record->status == \App\Models\PlacementRecord::STATUS_REJECTED)
                                                         <span class="badge badge-danger">ถูกปฏิเสธ</span>
+                                                        @if ($record->processor && $record->processed_at)
+                                                            <br><small class="text-muted">โดย:
+                                                                {{ Str::limit($record->processor->name, 15) }}<br>{{ $record->processed_at->locale('th')->diffForHumans() }}</small>
+                                                        @endif
                                                     @elseif ($record->status == \App\Models\PlacementRecord::STATUS_PENDING)
                                                         <span class="badge badge-warning">รออนุมัติ</span>
                                                     @else
@@ -166,22 +158,26 @@
                                                             class="badge badge-secondary">{{ ucfirst($record->status) }}</span>
                                                     @endif
                                                 </td>
-                                                {{-- <td>{{ $record->user->name ?? 'N/A' }}</td> --}}
                                                 <td class="text-center">
-                                                    <a href="{{ route('admin.placement-records.show', $record->id) }}"
-                                                        class="btn btn-info btn-xs" title="ดูรายละเอียด"><i
-                                                            class="fas fa-eye"></i></a>
-                                                    <a href="{{ route('admin.placement-records.edit', $record->id) }}"
-                                                        class="btn btn-warning btn-xs" title="แก้ไข"><i
-                                                            class="fas fa-edit"></i></a>
+                                                    {{-- เปลี่ยนปุ่ม Edit เป็นปุ่ม Review/Manage สำหรับรายการ Pending --}}
+                                                    @if ($record->status == \App\Models\PlacementRecord::STATUS_PENDING)
+                                                        <a href="{{ route('admin.placement-records.edit', $record->id) }}"
+                                                            {{-- หรือ route('admin.placement-records.review', $record->id) ถ้าสร้างหน้า review แยก --}} class="btn btn-primary btn-xs"
+                                                            title="ตรวจสอบและดำเนินการ">
+                                                            <i class="fas fa-search-plus"></i> ตรวจสอบ
+                                                        </a>
+                                                    @else
+                                                        <a href="{{ route('admin.placement-records.show', $record->id) }}"
+                                                            class="btn btn-info btn-xs" title="ดูรายละเอียด"><i
+                                                                class="fas fa-eye"></i></a>
+                                                        <a href="{{ route('admin.placement-records.edit', $record->id) }}"
+                                                            class="btn btn-warning btn-xs" title="แก้ไข"><i
+                                                                class="fas fa-edit"></i></a>
+                                                    @endif
                                                     <button class="btn btn-danger btn-xs delete-button"
-                                                        data-id="{{ $record->id }}"
-                                                        data-info="ปี {{ $record->academic_year }} - {{ $record->educationalArea->name ?? '' }} (รอบ {{ $record->round_number }})"
-                                                        title="ลบ"><i class="fas fa-trash-alt"></i></button>
-                                                    <form id="delete-form-{{ $record->id }}"
-                                                        action="{{ route('admin.placement-records.destroy', $record->id) }}"
-                                                        method="POST" style="display: none;"> @csrf @method('DELETE')
-                                                    </form>
+                                                        data-id="{{ $record->id }}" data-info="..." title="ลบ"><i
+                                                            class="fas fa-trash-alt"></i></button>
+                                                    {{-- ... (form ลบ) ... --}}
                                                 </td>
                                             </tr>
                                         @endforeach

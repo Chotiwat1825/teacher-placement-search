@@ -18,14 +18,29 @@ class UserPlacementSubmissionController extends Controller
      * Display a listing of the submissions for the authenticated user.
      * (จะทำในขั้นตอนถัดไป)
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $submissions = PlacementRecord::where('user_id', $user->id)
-            ->with(['educationalArea', 'subjectGroups', 'placementType'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-        return view('user.submissions.index', compact('submissions'));
+
+        $query = PlacementRecord::where('user_id', $user->id) // ดึงเฉพาะข้อมูลของ user ที่ login
+            ->with(['educationalArea', 'subjectGroups', 'placementType']) // Eager load relationships
+            ->orderBy('created_at', 'desc'); // เรียงตามวันที่สร้างล่าสุด
+
+        // (Optional) Filter by status if needed
+        if ($request->filled('status_filter')) {
+            $query->where('status', $request->status_filter);
+        }
+
+        $submissions = $query->paginate(10)->withQueryString(); // แบ่งหน้า และจำ filter
+
+        $statusOptions = [
+            // สำหรับ dropdown filter (ถ้ามี)
+            PlacementRecord::STATUS_PENDING => 'รอการอนุมัติ',
+            PlacementRecord::STATUS_APPROVED => 'อนุมัติแล้ว',
+            PlacementRecord::STATUS_REJECTED => 'ถูกปฏิเสธ',
+        ];
+
+        return view('user.submissions.index', compact('submissions', 'statusOptions'));
     }
 
     /**

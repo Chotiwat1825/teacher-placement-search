@@ -99,6 +99,7 @@ Route::middleware(['auth', 'admin'])
 
         // CRUD สำหรับ ข้อมูลการบรรจุ
         Route::resource('placement-records', AdminPlacementRecordController::class);
+        Route::put('placement-records/{placementRecord}/process-action', [AdminPlacementRecordController::class, 'processAction'])->name('placement-records.processAction'); // << Route ใหม่
 
         // =========================================================================
         // CRUD สำหรับ ประเภทการบรรจุ (Placement Types)

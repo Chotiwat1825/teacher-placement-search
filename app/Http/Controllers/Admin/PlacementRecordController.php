@@ -27,29 +27,42 @@ class PlacementRecordController extends Controller
     public function index(Request $request)
     {
         $query = PlacementRecord::query()
-            // Eager load relationships ที่ต้องการแสดงในตาราง index
-            ->with(['educationalArea', 'subjectGroups', 'user', 'placementType']) // << ตรวจสอบ 'placementType'
-            ->orderBy('announcement_date', 'desc')
-            ->orderBy('academic_year', 'desc')
-            ->orderBy('round_number', 'asc');
+            ->with(['educationalArea', 'subjectGroups', 'user', 'placementType', 'processor']) // << เพิ่ม 'processor' ถ้ามี
+            ->orderBy('status', 'asc') // << ให้รายการ pending ขึ้นก่อน (optional)
+            ->orderBy('created_at', 'desc'); // หรือ announcement_date
 
-        // ... (ส่วน Search และ Filter เหมือนเดิม) ...
-        // ในส่วน filter อาจจะเพิ่ม filter ตาม placement_type_id ด้วย
-        if ($request->filled('filter_placement_type_id')) {
-            $query->where('placement_type_id', $request->filter_placement_type_id);
+        // ... (Search term filter) ...
+        if ($request->filled('search_term')) {
+            /* ... */
         }
-        // ...
+
+        // ... (Filter by Educational Area, Subject Group, Academic Year, Placement Type) ...
+        if ($request->filled('filter_educational_area_id')) {
+            /* ... */
+        }
+        if ($request->filled('filter_subject_group_id')) {
+            /* ... */
+        }
+        if ($request->filled('filter_academic_year')) {
+            /* ... */
+        }
+        if ($request->filled('filter_placement_type_id')) {
+            /* ... */
+        }
+
+        // Filter by Status
+        if ($request->filled('filter_status')) {
+            $query->where('status', $request->filter_status);
+        }
 
         $placementRecords = $query->paginate(15)->withQueryString();
 
-        // Data for filter dropdowns
         $educationalAreas = EducationalArea::orderBy('name')->get();
         $subjectGroups = SubjectGroup::orderBy('name')->get();
-        $placementTypes = PlacementType::where('is_active', true)->orderBy('name')->get(); // << สำหรับ filter
+        $placementTypes = PlacementType::where('is_active', true)->orderBy('name')->get();
         $academicYears = PlacementRecord::select('academic_year')->distinct()->orderBy('academic_year', 'desc')->pluck('academic_year');
         $statuses = [
-            // << สำหรับ filter status (ถ้ามี)
-            PlacementRecord::STATUS_PENDING => 'รออนุมัติ',
+            PlacementRecord::STATUS_PENDING => 'รอการอนุมัติ',
             PlacementRecord::STATUS_APPROVED => 'อนุมัติแล้ว',
             PlacementRecord::STATUS_REJECTED => 'ถูกปฏิเสธ',
         ];
@@ -61,8 +74,8 @@ class PlacementRecordController extends Controller
                 'educationalAreas',
                 'subjectGroups',
                 'academicYears',
-                'placementTypes', // << ส่งไป view สำหรับ filter
-                'statuses', // << ส่งไป view สำหรับ filter
+                'placementTypes',
+                'statuses', // << ส่ง statuses ไปให้ view
             ),
         );
     }
@@ -149,7 +162,7 @@ class PlacementRecordController extends Controller
     /**
      * Display the specified resource.
      */
-     public function show(PlacementRecord $placementRecord)
+    public function show(PlacementRecord $placementRecord)
     {
         // Eager load relationships ทั้งหมดที่ต้องการแสดงในหน้ารายละเอียด
         $placementRecord->load(['educationalArea', 'subjectGroups', 'attachments', 'user', 'placementType']); // << ตรวจสอบ 'placementType'
@@ -286,6 +299,56 @@ class PlacementRecordController extends Controller
         } catch (\Exception $e) {
             Log::error("Error deleting placement record ID {$placementRecord->id}: " . $e->getMessage());
             return redirect()->route('admin.placement-records.index')->with('error', 'เกิดข้อผิดพลาดในการลบข้อมูล');
+        }
+    }
+    public function processAction(Request $request, PlacementRecord $placementRecord)
+    {
+        $request->validate([
+            'admin_action_status' => ['required', Rule::in([PlacementRecord::STATUS_APPROVED, PlacementRecord::STATUS_REJECTED])],
+            'rejection_reason' => 'nullable|string|max:1000|required_if:admin_action_status,' . PlacementRecord::STATUS_REJECTED,
+            // อาจจะ validate fields อื่นๆ ที่ Admin อาจจะแก้ไขก่อน approve/reject ด้วย (ถ้า form edit ส่งมาทั้งหมด)
+            // หรือจะให้ form นี้มีแค่ status กับ reason ก็ได้
+        ]);
+
+        // ตรวจสอบว่า record ยังเป็น pending อยู่หรือไม่ (ป้องกันการ process ซ้ำ)
+        if ($placementRecord->status !== PlacementRecord::STATUS_PENDING) {
+            return redirect()->route('admin.placement-records.index')->with('warning', 'รายการนี้ได้รับการดำเนินการไปแล้ว');
+        }
+
+        $newStatus = $request->input('admin_action_status');
+        $message = '';
+
+        try {
+            $updateData = [
+                'status' => $newStatus,
+                'processed_by_user_id' => Auth::id(),
+                'processed_at' => now(),
+                'rejection_reason' => $newStatus === PlacementRecord::STATUS_REJECTED ? $request->input('rejection_reason') : null,
+            ];
+
+            // (Optional) ถ้า Admin แก้ไขข้อมูลอื่นๆ ในฟอร์ม edit ก่อนกด Approve/Reject
+            // คุณอาจจะต้องดึงค่าเหล่านั้นจาก $request มา update ด้วย
+            // $updateData['academic_year'] = $request->input('academic_year', $placementRecord->academic_year);
+            // ... etc ...
+            // แต่ถ้า form นี้มีแค่ status กับ reason ก็ไม่ต้อง
+
+            $placementRecord->update($updateData);
+
+            if ($newStatus === PlacementRecord::STATUS_APPROVED) {
+                $message = 'อนุมัติข้อมูลการบรรจุสำเร็จ';
+                // (Optional) Send notification to user
+            } elseif ($newStatus === PlacementRecord::STATUS_REJECTED) {
+                $message = 'ปฏิเสธข้อมูลการบรรจุสำเร็จ';
+                // (Optional) Send notification to user with rejection_reason
+            }
+
+            return redirect()->route('admin.placement-records.index')->with('success', $message);
+        } catch (\Exception $e) {
+            Log::error("Error processing placement record ID {$placementRecord->id}: " . $e->getMessage());
+            return redirect()
+                ->back()
+                ->with('error', 'เกิดข้อผิดพลาดในการดำเนินการ: ' . $e->getMessage())
+                ->withInput();
         }
     }
 }

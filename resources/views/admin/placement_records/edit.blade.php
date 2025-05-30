@@ -345,12 +345,57 @@ $currentRoundEdit = old('round_number', $placementRecord->round_number);
                                 </div>
                             @endif
 
+                            @if ($placementRecord->status == \App\Models\PlacementRecord::STATUS_PENDING && $placementRecord->user_id != Auth::id())
+                                {{-- แสดงเฉพาะรายการ pending ที่ไม่ใช่ของตัวเอง --}}
+                                <hr class="my-4">
+                                <h4 class="text-indigo"><i class="fas fa-tasks mr-2"></i>ดำเนินการอนุมัติ/ปฏิเสธรายการนี้
+                                </h4>
+                                <p class="text-muted">ข้อมูลนี้ถูกส่งโดย:
+                                    <strong>{{ $placementRecord->creator->name ?? 'ไม่ระบุผู้ใช้' }}</strong>
+                                    เมื่อ {{ $placementRecord->created_at->locale('th')->format('j F Y H:i') }}
+                                </p>
+
+                                <div class="form-group">
+                                    <label for="admin_status_action">การดำเนินการ:</label>
+                                    <div>
+                                        <button type="button" class="btn btn-success mr-2" id="approveButton">
+                                            <i class="fas fa-check-circle mr-1"></i> อนุมัติรายการนี้
+                                        </button>
+                                        <button type="button" class="btn btn-danger" id="rejectButton">
+                                            <i class="fas fa-times-circle mr-1"></i> ปฏิเสธรายการนี้
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="rejection_reason_section" style="display:none;" class="mt-3">
+                                    <div class="form-group">
+                                        <label for="rejection_reason">เหตุผลในการปฏิเสธ (ถ้ามี):</label>
+                                        <textarea name="rejection_reason" id="rejection_reason_admin"
+                                            class="form-control @error('rejection_reason') is-invalid @enderror" rows="3"
+                                            placeholder="ระบุเหตุผลที่ปฏิเสธรายการนี้...">{{ old('rejection_reason', $placementRecord->rejection_reason) }}</textarea>
+                                        @error('rejection_reason')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                    <button type="button" class="btn btn-danger" id="confirmRejectButton">
+                                        ยืนยันการปฏิเสธ
+                                    </button>
+                                </div>
+                                {{-- Hidden fields for status and rejection reason to be submitted with the main form or via AJAX --}}
+                                <input type="hidden" name="admin_action_status" id="admin_action_status">
+                                {{-- ถ้าจะ submit ด้วย form หลัก ต้องมี name="rejection_reason" ใน textarea ด้านบน --}}
+                            @endif
                         </div>
+                        <!-- /.card-body -->
+
                         <div class="card-footer">
-                            <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i>
-                                อัปเดตข้อมูล</button>
-                            <a href="{{ route('admin.placement-records.index') }}" class="btn btn-default float-right"><i
-                                    class="fas fa-arrow-left mr-1"></i> ยกเลิก</a>
+                            <button type="submit" class="btn btn-warning"> {{-- ปุ่มนี้จะใช้สำหรับ "อัปเดตข้อมูล" ที่แก้ไข --}}
+                                <i class="fas fa-save mr-1"></i> อัปเดตข้อมูล (หากมีการแก้ไข)
+                            </button>
+                            {{-- (ถ้ายังไม่มีปุ่ม Approve/Reject แยก) อาจจะต้องมีปุ่ม Submit แยกสำหรับ Approve/Reject --}}
+                            <a href="{{ route('admin.placement-records.index') }}" class="btn btn-default float-right">
+                                <i class="fas fa-arrow-left mr-1"></i> ยกเลิก/กลับ
+                            </a>
                         </div>
                     </div>
                 </form>
@@ -511,7 +556,72 @@ $currentRoundEdit = old('round_number', $placementRecord->round_number);
                 $('#rejection_reason').val(''); // Clear reason if not rejected
             }
         }).trigger('change'); // Trigger on page load to set initial state
+        const adminActionStatusInput = $('#admin_action_status');
+        const rejectionReasonSection = $('#rejection_reason_section');
+        const rejectionReasonTextarea = $('#rejection_reason_admin');
+        const mainForm = $('#editPlacementRecordForm'); // << ID ของ form หลัก
 
+        $('#approveButton').on('click', function() {
+            Swal.fire({
+                title: 'ยืนยันการอนุมัติ?',
+                text: "คุณต้องการอนุมัติข้อมูลการบรรจุนี้ใช่หรือไม่?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ใช่, อนุมัติเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    adminActionStatusInput.val(
+                        '{{ \App\Models\PlacementRecord::STATUS_APPROVED }}');
+                    rejectionReasonTextarea.val(''); // Clear rejection reason
+                    mainForm.attr('action',
+                        "{{ route('admin.placement-records.processAction', $placementRecord->id) }}"
+                    ); // Route ใหม่สำหรับ Process
+                    mainForm.submit();
+                }
+            });
+        });
+
+        $('#rejectButton').on('click', function() {
+            rejectionReasonSection.slideDown();
+            adminActionStatusInput.val('{{ \App\Models\PlacementRecord::STATUS_REJECTED }}');
+        });
+
+        $('#confirmRejectButton').on('click', function() {
+            // (Optional) Client-side validation for rejection_reason
+            if (rejectionReasonTextarea.val().trim() === '') {
+                Swal.fire('ข้อผิดพลาด', 'กรุณาระบุเหตุผลในการปฏิเสธ', 'error');
+                rejectionReasonTextarea.focus();
+                return;
+            }
+
+            Swal.fire({
+                title: 'ยืนยันการปฏิเสธ?',
+                html: "คุณต้องการปฏิเสธข้อมูลการบรรจุนี้ใช่หรือไม่?<br>เหตุผล: " +
+                    rejectionReasonTextarea.val(),
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ใช่, ปฏิเสธ!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // ค่า status และ rejection_reason จะถูกส่งไปกับ form หลัก
+                    // เมื่อกดปุ่ม "อัปเดตข้อมูล" ถ้าไม่ต้องการ submit form หลักทันที
+                    // อาจจะต้องสร้าง route และ controller method แยกสำหรับ approve/reject
+                    // หรือใช้ AJAX
+                    // ในที่นี้จะสมมติว่าการกด "ยืนยันการปฏิเสธ" จะ submit form หลัก
+                    // โดย JavaScript ได้ตั้งค่า admin_action_status และ rejection_reason ไว้แล้ว
+                    mainForm.attr('action',
+                        "{{ route('admin.placement-records.processAction', $placementRecord->id) }}"
+                    ); // Route ใหม่สำหรับ Process
+                    mainForm.submit();
+                }
+            });
+        });
     });
 </script>
 @stop
