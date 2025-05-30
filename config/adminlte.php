@@ -320,6 +320,11 @@ return [
             'can' => 'manage-blog',
         ],
         [
+            'text' => 'หน้าแรก',
+            'url' => '/',
+            'icon' => 'fas fa-fw fa-home',
+        ],
+        [
             'text' => 'แดชบอร์ด',
             'route' => 'admin.dashboard', // ชื่อ Route ไปยัง Admin Dashboard
             'icon' => 'fas fa-fw fa-tachometer-alt',
